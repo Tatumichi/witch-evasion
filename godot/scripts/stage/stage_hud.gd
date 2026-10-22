@@ -540,6 +540,8 @@ func _process(delta: float) -> void:
 		_say_left -= delta
 		if _say_left <= 0.0:
 			_say_box.visible = false
+			if _portrait:
+				_portrait.visible = false
 	if _god_left > 0.0:
 		_god_left -= delta
 		if _god_left <= 0.0:

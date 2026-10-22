@@ -49,6 +49,13 @@ func _run() -> void:
 	# --- タイトル
 	if not _check(_scene.state == Stage.State.TITLE and hud.is_title_visible(), "タイトル表示"): return
 
+	# --- 会話の立ち絵は、セリフが時間切れで消えたら一緒に消える
+	var portrait := hud.find_child("Portrait", true, false) as Control
+	hud.say("メルル", "テスト", 0.2)
+	if not _check(portrait != null and portrait.visible, "メルルのセリフで立ち絵が出る"): return
+	await _wait(0.4)
+	if not _check(not portrait.visible, "セリフが消えたら立ち絵も消える"): return
+
 	# --- 開始
 	_scene.start_stage()
 	if not _check(_scene.state == Stage.State.INTRO and _scene.hats == 3, "開始で INTRO・帽子 3"): return
