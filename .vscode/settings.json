@@ -1,0 +1,21 @@
+{
+  "files.exclude": {
+    "**/.godot": true,
+    "**/.import": true
+  },
+  "search.exclude": {
+    "**/.godot": true,
+    "**/build": true,
+    "**/*.import": true
+  },
+  "[gdscript]": {
+    "editor.insertSpaces": false,
+    "editor.tabSize": 4
+  },
+  "[gdshader]": {
+    "editor.insertSpaces": false
+  },
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
+}
