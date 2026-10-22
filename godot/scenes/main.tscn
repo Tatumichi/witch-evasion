@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/background.gd" id="2_bg"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="3_player"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="4_hud"]
+[ext_resource type="Script" path="res://scripts/ground_shadow.gd" id="5_shadow"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 15.0
@@ -16,6 +17,11 @@ z_index = -10
 script = ExtResource("2_bg")
 
 [node name="World" type="Node2D" parent="."]
+
+[node name="Shadow" type="Sprite2D" parent="World"]
+z_index = -1
+script = ExtResource("5_shadow")
+target_path = NodePath("../Player")
 
 [node name="Player" type="Area2D" parent="World"]
 position = Vector2(270, 710)

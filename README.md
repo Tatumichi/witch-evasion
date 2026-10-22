@@ -72,6 +72,7 @@ godot/
     ├── pickup.gd          光の星
     ├── ring.gd            被弾・回収のリング演出
     ├── background.gd      夜空・月・星・星雲（タイトル中は月を隠す）
+    ├── ground_shadow.gd   接地影／光暈（生成画像には焼き込まない）
     ├── hud.gd             スコア表示 / タイトル / ゲームオーバー
     └── stage/             ── ここから STAGE 1 ──
         ├── stage1.gd              進行・道中の出現表・猫/キャンディ/帽子・ボス戦の流れ
@@ -175,7 +176,8 @@ godot --path godot --write-movie frames/frame.png --fixed-fps 30 --quit-after 45
 ├── docs/
 │   ├── setup.md                ← 詳細な構築手順とトラブルシュート
 │   ├── witch_merulu_setting.md ← 世界観・主人公・導入シーン台本
-│   └── stage_design.md         ← 全5ステージの設定書
+│   ├── stage_design.md         ← 全5ステージの設定書
+│   └── ai-quality/             ← イラスト品質向上プロジェクト（調査と改善の記録）
 └── .gitignore
 ```
 
@@ -214,7 +216,7 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py gen ^
 1. 1 回の依頼は「1 シーン + 1 スクリプト」程度に区切る
 2. 必ず `godot --headless --quit --path godot` で検証させる（エラーを自分で読ませる）
 3. `.tscn` はテキストなので AI に直接編集させてよい。ただし**エディタで開いたまま**にしない
-4. 画像生成は `tools/comfy.py` 経由で依頼できる（モデル: Animagine XL 4.0・832x1216 / 28 steps で実測 約22秒）。成果物は `godot/assets/` に置く
+4. 画像生成は `tools/comfy.py` 経由で依頼できる（`--preset` でモデル別の品質タグ・ネガ・パラメータを一括切替。既定は導入済みモデルを自動選択）。成果物は `godot/assets/` に置く。設計方針は `docs/ai-quality/02-prompt-design.md`
 
 ## 次の一歩
 
