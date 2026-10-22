@@ -69,6 +69,12 @@ func _run() -> void:
 
 	# --- 茶トラのキャンディが小さな障害物を壊すか
 	_scene._start_cat_effect(0)
+	# 道中のシーツ（キャンディでは壊れない）が射線を横切るとキャンディが止まり、確認が運しだいになる。
+	# 確認のあいだは障害物を片付けて、ランダム出現も止めておく
+	for n in _scene.world.get_children():
+		if n != player and n.is_in_group("obstacles"):
+			n.queue_free()
+	_scene._hold_until = _scene.road_t + 3.0
 	var PigeonScript := preload("res://scripts/stage/pigeon.gd")
 	var target = PigeonScript.new()
 	target.setup(Vector2(player.global_position.x - 34.0, 140.0), 0.0, RandomNumberGenerator.new())

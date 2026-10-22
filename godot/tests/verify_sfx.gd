@@ -81,6 +81,11 @@ func _run() -> void:
 	# --- 茶トラ: キャンディで鳩が逃げる。効果の終わり際の「かちっ」と終了音
 	_scene._end_cat_effect()
 	_scene._start_cat_effect(0)
+	# 道中のシーツ（キャンディでは壊れない）が射線を横切ると命中しないので、確認のあいだは片付けて出現も止める
+	for n in _scene.world.get_children():
+		if n != player and n.is_in_group("obstacles"):
+			n.queue_free()
+	_scene._hold_until = _scene.road_t + 3.0
 	var target = preload("res://scripts/stage/pigeon.gd").new()
 	target.setup(Vector2(player.global_position.x - 34.0, 140.0), 0.0, RandomNumberGenerator.new())
 	_scene.world.add_child(target)
@@ -155,6 +160,13 @@ func _run() -> void:
 	L.break_apart()
 	_heard(["laundry_pop"], "洗濯物がはじける音")
 	_scene._start_cat_effect(0)
+	# キャンディは真上にしか飛ばない。突風で画面端へ流されたままだとボスに当たらないことがあるので、
+	# 当たるまでのあいだボスの真下に置く（発射口はメルルの 34px 左）
+	for i in int(6.0 * 60.0):
+		if _n("candy_eat") > 0 or _scene._boss == null:
+			break
+		player.global_position.x = clampf(_scene._boss.global_position.x + 34.0, 40.0, 500.0)
+		await physics_frame
 	_scene.best = 0
 	if not await _wait_state(Stage.State.CLEAR, 60.0):
 		_check(false, "クリア")
