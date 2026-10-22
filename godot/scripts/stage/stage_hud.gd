@@ -12,6 +12,9 @@ const LOGO_PATH := "res://assets/ui/logo.png"
 const CARD_PATH := "res://assets/ui/title_witch.png"
 const Sfx := preload("res://scripts/stage/sfx.gd")
 const HAT_PATH := "res://assets/props/hat.png"
+const SHARD_PATH := "res://assets/props/shard.png"
+const CAT_ICON_PATH := "res://assets/props/cat_icon.png"
+const PORTRAIT_PATH := "res://assets/ui/meruru_face.png"
 
 const TEXT := Color(1.0, 0.98, 0.96)
 const OUTLINE := Color(0.14, 0.07, 0.18, 0.92)
@@ -23,6 +26,7 @@ var _hats: HatsView
 var _courage_label: Label
 var _courage_bar: MeterBar
 var _cats_label: Label
+var _portrait: TextureRect
 var _score_label: Label
 var _rail: ProgressRail
 
@@ -110,6 +114,7 @@ func _build_status() -> void:
 	_root.add_child(_hats)
 
 	var shard := ShardIcon.new()
+	shard.tex = _tex(SHARD_PATH)
 	shard.position = Vector2(20.0, 62.0)
 	shard.size = Vector2(16.0, 22.0)
 	_root.add_child(shard)
@@ -123,9 +128,20 @@ func _build_status() -> void:
 	_courage_bar.fill = Color(0.62, 1.0, 0.86)
 	_root.add_child(_courage_bar)
 
+	var cat_icon := TextureRect.new()
+	cat_icon.name = "CatIcon"
+	cat_icon.texture = _tex(CAT_ICON_PATH)
+	cat_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cat_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	cat_icon.custom_minimum_size = Vector2.ZERO
+	cat_icon.position = Vector2(16.0, 95.0)
+	cat_icon.size = Vector2(24.0, 24.0)
+	cat_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(cat_icon)
+
 	_cats_label = _label(20)
 	_cats_label.name = "Cats"
-	_cats_label.position = Vector2(18.0, 98.0)
+	_cats_label.position = Vector2(46.0, 98.0)
 	_root.add_child(_cats_label)
 
 	_score_label = _label(34)
@@ -179,20 +195,35 @@ func _build_dialogue() -> void:
 	_say_box = PanelContainer.new()
 	_say_box.name = "Say"
 	_say_box.add_theme_stylebox_override("panel", _panel_style(PANEL))
+	_portrait = TextureRect.new()
+	_portrait.name = "Portrait"
+	_portrait.texture = _tex(PORTRAIT_PATH)
+	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.custom_minimum_size = Vector2.ZERO
+	_portrait.position = Vector2(26.0, 856.0)
+	_portrait.size = Vector2(76.0, 76.0)
+	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_portrait.visible = false
+
 	_say_box.position = Vector2(16.0, 846.0)
 	_say_box.size = Vector2(508.0, 96.0)
 	_say_box.custom_minimum_size = Vector2(508.0, 0.0)
 	_say_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_say_box)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 96)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_say_box.add_child(margin)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 2)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_say_box.add_child(v)
+	margin.add_child(v)
 	_say_name = _label(15, Color(1.0, 0.78, 0.90), 0)
 	v.add_child(_say_name)
 	_say_text = _label(22, TEXT, 0)
 	_say_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_say_text.custom_minimum_size = Vector2(478.0, 0.0)
+	_say_text.custom_minimum_size = Vector2(388.0, 0.0)
 	v.add_child(_say_text)
 	_say_box.visible = false
 
@@ -209,6 +240,8 @@ func _build_dialogue() -> void:
 	_god_text.custom_minimum_size = Vector2(392.0, 0.0)
 	_god_box.add_child(_god_text)
 	_god_box.visible = false
+	# パネルより手前に描く
+	_root.add_child(_portrait)
 
 
 func _build_overlays() -> void:
@@ -425,6 +458,8 @@ func say(speaker: String, text: String, seconds := 2.6) -> void:
 	_say_name.text = speaker
 	_say_text.text = text
 	_say_box.visible = true
+	if _portrait:
+		_portrait.visible = speaker.find("メルル") >= 0
 	_say_left = seconds
 	if speaker == "メルル":
 		Sfx.fire(self, "talk_meruru", {"pitch_jitter": 0.04})
@@ -440,6 +475,8 @@ func god_say(text: String, seconds := 3.0) -> void:
 func clear_talk() -> void:
 	_say_box.visible = false
 	_god_box.visible = false
+	if _portrait:
+		_portrait.visible = false
 	_say_left = 0.0
 	_god_left = 0.0
 
@@ -509,8 +546,15 @@ class HatsView extends Control:
 
 
 class ShardIcon extends Control:
+	var tex: Texture2D
+
 	func _draw() -> void:
 		var c := Vector2(8.0, 11.0)
+		if tex:
+			var w := 20.0
+			var h := w * float(tex.get_height()) / float(tex.get_width())
+			draw_texture_rect(tex, Rect2(c - Vector2(w, h) * 0.5, Vector2(w, h)), false)
+			return
 		draw_colored_polygon(PackedVector2Array([c + Vector2(0.0, -11.0), c + Vector2(7.0, 0.0), c + Vector2(0.0, 11.0), c + Vector2(-7.0, 0.0)]), Color(1.0, 0.96, 0.72))
 
 

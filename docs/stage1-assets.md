@@ -9,7 +9,7 @@ STAGE 1「村の空」で使われているイラスト・UI・素材の棚卸�
 
 | 種別 | 点数 | 状態 |
 | --- | --- | --- |
-| 画像素材 | **14点** | キャラ2点＋背景2点＋ボス差分4点＋小物4点は生成済み、UI2点はコード生成 |
+| 画像素材 | **17点** | キャラ2点＋背景2点＋ボス差分4点＋小物6点＋UI3点 |
 | フォント | 1点 | M PLUS Rounded 1c Bold（OFL） |
 | コード描画 | 10スクリプト | 背景・障害物・ピックアップ・ボス・UI部品はすべて**プレースホルダー** |
 | 音声 | **0点** | 未実装 |
@@ -36,6 +36,9 @@ STAGE 1「村の空」で使われているイラスト・UI・素材の棚卸�
 | `godot/assets/props/cloud.png` | 489×393 RGBA | 雲（背景） | 同上 |
 | `godot/assets/props/cat_tabby.png` | 484×595 RGBA | 茶トラ猫（落っこち猫・キャンディ） | 生成＋`cut_out.py` |
 | `godot/assets/props/cat_white.png` | 404×534 RGBA | 白猫（落っこち猫の別個体） | 同上 |
+| `godot/assets/props/shard.png` | 330×425 RGBA | 勇気のかけらのアイコン | 生成＋`cut_out.py` |
+| `godot/assets/props/cat_icon.png` | 309×238 RGBA | 救った猫カウンタのアイコン | `cat_tabby.png` の頭を切り出し |
+| `godot/assets/ui/meruru_face.png` | 512×512 RGBA | 会話パネルの立ち絵 | `art/meluru/final_rich/meluru_face.png` |
 
 未使用の生成素材: `art/meluru/final_rich/meluru_face.png`（会話用ポートレート）、`meluru_34.png`（斜め立ち）。会話UIに使える。
 
@@ -114,6 +117,13 @@ STAGE 1「村の空」で使われているイラスト・UI・素材の棚卸�
 | 会話 | メルル／神々のセリフ（下部パネル） |
 | 被弾 | 画面の赤いヴェール（faint） |
 | リザルト | 到達高度・救出猫・スコア・ベスト |
+
+### 会話パネル
+
+| 要素 | 内容 |
+| --- | --- |
+| 立ち絵 | `meruru_face.png` を左に76×76で表示。話者が「メルル」のときだけ出す |
+| テキスト | 立ち絵の分だけ左に96pxの余白を取る |
 
 ### 色
 
