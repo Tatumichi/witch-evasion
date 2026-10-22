@@ -4,18 +4,21 @@ DeepSeek を AI 相棒にして Godot 4 でゲームを作るための環境で�
 
 ## 収録ゲーム: WITCH EVASION
 
-魔女の少女が夜空を飛び、降ってくる障害物をよける 2D 縦スクロールアクション。
-背景と障害物はコード描画、魔女とタイトル画面は生成した画像を使います（画像を消すとコード描画に戻ります）。
+見習い魔女メルルが、止まらないほうきで空を昇っていく 2D 縦スクロールアクション。
+起動すると **STAGE 1「村の空」** が始まります（グラフィックはコード描画の仮置き。魔女とタイトル画面だけ生成画像）。
 
 | 要素 | 内容 |
 |---|---|
-| 操作 | `←` `→` `↑` `↓` / `W` `A` `S` `D` で移動、`SPACE` / `ENTER` / クリックで開始・リトライ |
-| スコア | 飛行距離で加算、光の星を取ると +25 |
-| 難易度 | 70 秒かけてスクロール速度と障害物の出現間隔が変化 |
-| 障害物 | 浮遊岩 / 枯れ枝 / 鳥の群れ（時間経過で種類が増える） |
-| 保存 | ベストスコアを `user://witch_flight.cfg` に保存 |
-| 描画 | 夜空グラデーション、月、星、星雲、パララックス / 魔女は生成スプライト（被弾差分あり） |
-| タイトル | ロゴ画像＋立ち絵カード。カードがゆっくり浮き、開始プロンプトが明滅する |
+| 操作 | `←` `→` `↑` `↓` / `W` `A` `S` `D` で移動、`SPACE` / `ENTER` / クリックで開始 |
+| 構成 | 道中 120 秒 → ボス「ぐるぐる大風見鶏」→ クリア結果 |
+| ライフ | 帽子 3 つ。被弾後 1.5 秒は無敵。0 で目を回し、道中なら最初から・ボス戦ならボス戦の頭から |
+| 障害物 | 洗濯物（シーツ / 靴下）、鳩の列（1 羽分のすき間）、落ちてくる風見鶏、煙突の煙（当たらないが遅くなる） |
+| 落っこち猫 | 「にゃー！」の予告後に落ちてくる。受け止めると 15 秒間、茶トラ＝キャンディ連射 / 白猫＝バリア |
+| 勇気のかけら | 50 個で帽子 1 つ回復（満タンなら +500） |
+| ボス | 満足ゲージが満タンになるまでよけ切ればクリア。キャンディを当てると早く満足する |
+| 保存 | ベストスコアを `user://witch_stage.cfg` に保存 |
+
+以前のエンドレス版（夜空で岩・枝・鳥をよけ続ける）も `scenes/main.tscn` として残してあります。
 
 ### 世界観・ステージ設定（企画）
 
@@ -26,7 +29,7 @@ DeepSeek を AI 相棒にして Godot 4 でゲームを作るための環境で�
 | [`docs/witch_merulu_setting.md`](docs/witch_merulu_setting.md) | コンセプト、主人公メルル、暴走の原因と神域、導入シーン台本 |
 | [`docs/stage_design.md`](docs/stage_design.md) | 全5ステージの設定書。共通仕様、障害物、落っこち猫、ボス、セリフ、エンディング |
 
-設定書で決めている主な仕様（現在の実装とは異なる部分があります）:
+設定書で決めている主な仕様（STAGE 1 は実装済み、STAGE 2〜5 は未実装）:
 
 | 項目 | 設定 |
 |---|---|
@@ -44,15 +47,21 @@ godot/
 ├── project.godot          540x960・入力マップ・物理レイヤー
 ├── icon.png               256px アイコン（ドット絵調）
 ├── icon.ico               exe 用アイコン（16〜256）
-├── scenes/main.tscn       Background / World / Player / HUD
+├── scenes/
+│   ├── stage1.tscn        STAGE 1「村の空」（メインシーン）
+│   └── main.tscn          以前のエンドレス版
 ├── assets/
 │   ├── characters/witch/
 │   │   ├── witch_sprite.png   通常（240x190・原点焼き込み済み）
 │   │   └── witch_hit.png      被弾差分（同じ原点・同じ縮尺）
-│   └── ui/
-│       ├── logo.png           タイトルロゴ（780x400）
-│       └── title_witch.png    立ち絵カード（420x500）
+│   ├── ui/
+│   │   ├── logo.png           タイトルロゴ（780x400）
+│   │   └── title_witch.png    立ち絵カード（420x500）
+│   └── fonts/
+│       ├── MPLUSRounded1c-Bold.ttf  セリフ・HUD 用の日本語フォント
+│       └── OFL.txt                  フォントのライセンス（SIL OFL 1.1）
 ├── tests/
+│   ├── verify_stage1.gd   STAGE 1 を最初から最後まで通す検証
 │   ├── verify_sprite.gd   スプライト装着と被弾差分の検証
 │   ├── verify_ui.gd       タイトル画面とスコア表示の検証
 │   └── hit_demo.tscn      被弾フレームを撮るためのデモ
@@ -63,8 +72,25 @@ godot/
     ├── pickup.gd          光の星
     ├── ring.gd            被弾・回収のリング演出
     ├── background.gd      夜空・月・星・星雲（タイトル中は月を隠す）
-    └── hud.gd             スコア表示 / タイトル / ゲームオーバー
+    ├── hud.gd             スコア表示 / タイトル / ゲームオーバー
+    └── stage/             ── ここから STAGE 1 ──
+        ├── stage1.gd              進行・道中の出現表・猫/キャンディ/帽子・ボス戦の流れ
+        ├── stage_player.gd        player.gd を拡張（無敵時間・猫の同乗・バリア・煙で減速）
+        ├── stage_hud.gd           帽子・かけら・猫・スコア・高度レール・セリフ・結果画面
+        ├── stage1_background.gd   朝焼けの空、流れていく村、遠くの教会の塔
+        ├── laundry.gd             洗濯物（シーツ / 靴下）
+        ├── pigeon.gd              鳩（列で出る）
+        ├── weathervane.gd         落ちてくる小さな風見鶏
+        ├── smoke.gd               煙突の煙
+        ├── courage.gd             勇気のかけら
+        ├── falling_cat.gd         落っこち猫
+        ├── candy.gd               茶トラのキャンディ
+        ├── boss_weathervane.gd    ボス「ぐるぐる大風見鶏」と満足ゲージ
+        ├── wind_arrow.gd          ボスの矢印型の風向き板
+        └── fx.gd                  飛んでいく帽子・「ごめんね」などの小演出
 ```
+
+道中の出現タイミングは `stage1.gd` の `_build_timeline()`（決まった出来事）と `SECTIONS`（区間ごとのランダム出現）で調整する。
 
 生成前のレンダーとプロンプト記録は `art/witch/` に置いてある。
 
@@ -80,9 +106,20 @@ godot --headless --path godot --script res://tests/verify_sprite.gd
 # タイトル画面のロゴ / 立ち絵とスコア表示の切替（失敗時は exit 1）
 godot --headless --path godot --script res://tests/verify_ui.gd
 
-# タイトルを飛ばして即ゲーム開始（撮影・確認用）
+# STAGE 1 を通しで検証（被弾・猫・キャンディ・やり直し・道中 120 秒・ボス・クリア。失敗時は exit 1）
+# --fixed-fps 60 を付けると実時間を待たずに数秒で終わる
+godot --headless --path godot --fixed-fps 60 --script res://tests/verify_stage1.gd
+
+# STAGE 1：タイトルを飛ばして開始 / ボス戦から開始 / 被弾しない（確認用。組み合わせ可）
 godot --path godot -- --start
+godot --path godot -- --boss
+godot --path godot -- --start --god
+
+# 以前のエンドレス版を遊ぶ
+godot --path godot res://scenes/main.tscn
 ```
+
+clone 直後など `.godot/` が無い状態では、ヘッドレス検証の前に一度 `godot --headless --import --path godot` で取り込みを済ませる（しないと画像やフォントが読み込めず検証が失敗する）。
 
 タイトル画面の確認（PNG 連番で書き出し）:
 ```bash
@@ -183,6 +220,6 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py gen ^
 
 1. Cline に DeepSeek API キーを設定（`docs/setup.md` 参照）
 2. タイトル画面用の立ち絵（`art/witch/witch_chibi_s111.png`）を HUD に組み込む
-3. WITCH EVASION に効果音・BGM を追加（未実装）
+3. 効果音・BGM を追加（未実装）
 4. LDtk でステージを作り、`godot/assets/` のスプライトに差し替える
-5. `docs/stage_design.md` に沿って、ステージ制・帽子ライフ・落っこち猫・ボス戦を実装する
+5. STAGE 1 の仮グラフィックを差し替え、`docs/stage_design.md` に沿って STAGE 2「丘と森の上空」を実装する

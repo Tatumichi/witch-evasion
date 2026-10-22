@@ -32,6 +32,10 @@ const OUTLINE := Color(0.10, 0.03, 0.14, 0.85)
 var velocity := Vector2.ZERO
 var active := false
 var alive := true
+## 外から加わる押し流し（ボスの突風など）。ステージ側が設定する。既定は 0。
+var push := Vector2.ZERO
+## 移動速度の倍率（煙の中で遅くなるなど）。既定は 1。
+var speed_mul := 1.0
 
 var _t := 0.0
 var _tilt := -0.24
@@ -162,8 +166,8 @@ func _physics_process(delta: float) -> void:
 	if active:
 		dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
-	velocity = velocity.lerp(dir * max_speed, 1.0 - exp(-accel * delta))
-	position += velocity * delta
+	velocity = velocity.lerp(dir * max_speed * speed_mul, 1.0 - exp(-accel * delta))
+	position += (velocity + push) * delta
 	position.x = clampf(position.x, 40.0, GAME_W - 40.0)
 	position.y = clampf(position.y, GAME_H * 0.24, GAME_H - 60.0)
 

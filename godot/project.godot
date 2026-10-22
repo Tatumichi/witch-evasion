@@ -6,8 +6,8 @@ config_version=5
 [application]
 
 config/name="Witch Evasion"
-config/description="夜空を飛ぶ魔女の少女。降ってくる障害物をよけて飛び続けろ。"
-run/main_scene="res://scenes/main.tscn"
+config/description="見習い魔女メルルが、止まらないほうきで空を昇っていく。STAGE 1「村の空」。"
+run/main_scene="res://scenes/stage1.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.png"
 config/windows_native_icon="res://icon.ico"
@@ -57,3 +57,4 @@ move_down={
 2d_physics/layer_1="player"
 2d_physics/layer_2="obstacle"
 2d_physics/layer_3="pickup"
+2d_physics/layer_5="candy"
