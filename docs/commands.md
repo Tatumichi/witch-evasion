@@ -69,10 +69,11 @@ UI_CARD_SOURCE="art/meluru/rich/rich_cute_s5041.png" $PY tools/make_ui_art.py
 # BGM（MIDI 原本と、ゲーム用ループ OGG）。pip install mido numpy scipy、ffmpeg が必要
 python tools/music/stage1_bgm.py
 python tools/music/boss1_bgm.py
+python tools/music/stage2_bgm.py
+python tools/music/boss2_bgm.py
 
 # SE（全部、または名前を指定して作り直す）。pip install numpy scipy
-python tools/sfx/make_se.py
-python tools/sfx/make_se.py hit gust_warning
+python tools/sfx/make_se.py hit gust_warning     # 名前を渡して作り直す（全部を一度に作り直すと boss_appear・church_bell が少し変わる）
 ```
 
 音源を差し替えたら `--headless --editor --quit` で再インポートする。
