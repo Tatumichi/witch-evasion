@@ -1,0 +1,19 @@
+* text=auto eol=lf
+
+# Windows バッチは CRLF 必須
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# バイナリ
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.psd binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.glb binary
+*.blend binary
+*.ttf binary
+*.otf binary
