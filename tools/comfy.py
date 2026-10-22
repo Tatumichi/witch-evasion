@@ -630,8 +630,8 @@ def add_common_options(p) -> None:
     p.add_argument("--control-end", type=float, default=1.0)
     p.add_argument("--control-preprocess", choices=("none", "canny"), default="none",
                    help="canny=グレースケール画像から線画を作る")
-    p.add_argument("--canny-low", type=int, default=100)
-    p.add_argument("--canny-high", type=int, default=200)
+    p.add_argument("--canny-low", type=float, default=0.4)
+    p.add_argument("--canny-high", type=float, default=0.8)
     p.add_argument(
         "--lora",
         action="append",

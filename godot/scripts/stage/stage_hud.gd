@@ -11,6 +11,7 @@ const FONT_PATH := "res://assets/fonts/MPLUSRounded1c-Bold.ttf"
 const LOGO_PATH := "res://assets/ui/logo.png"
 const CARD_PATH := "res://assets/ui/title_witch.png"
 const Sfx := preload("res://scripts/stage/sfx.gd")
+const HAT_PATH := "res://assets/props/hat.png"
 
 const TEXT := Color(1.0, 0.98, 0.96)
 const OUTLINE := Color(0.14, 0.07, 0.18, 0.92)
@@ -101,6 +102,8 @@ func _panel_style(c: Color, radius := 14) -> StyleBoxFlat:
 
 func _build_status() -> void:
 	_hats = HatsView.new()
+	if ResourceLoader.exists(HAT_PATH):
+		_hats.tex = load(HAT_PATH) as Texture2D
 	_hats.name = "Hats"
 	_hats.position = Vector2(14.0, 10.0)
 	_hats.size = Vector2(130.0, 44.0)
@@ -484,12 +487,19 @@ func _process(delta: float) -> void:
 class HatsView extends Control:
 	var count := 3
 	var max_count := 3
+	var tex: Texture2D
 
 	func _draw() -> void:
 		for i in max_count:
 			var o := Vector2(18.0 + i * 40.0, 30.0)
 			var have := i < count
 			var a := 1.0 if have else 0.25
+			if tex:
+				var w := 30.0
+				var h := w * float(tex.get_height()) / float(tex.get_width())
+				draw_texture_rect(tex, Rect2(o - Vector2(w, h) * 0.5, Vector2(w, h)),
+					false, Color(1.0, 1.0, 1.0, a))
+				continue
 			var brim := Color(0.28, 0.18, 0.44, a)
 			var cone := Color(0.46, 0.32, 0.68, a)
 			draw_colored_polygon(PackedVector2Array([o + Vector2(-17.0, 4.0), o + Vector2(17.0, 4.0), o + Vector2(12.0, 9.0), o + Vector2(-12.0, 9.0)]), brim)

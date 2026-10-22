@@ -20,6 +20,7 @@ const PLAYER_Y := 710.0
 ## 画像素材（無ければ下のコード描画にフォールバックする）
 const VILLAGE_TEX := "res://assets/background/village_band.png"
 const TOWER_TEX := "res://assets/background/tower.png"
+const CLOUD_TEX := "res://assets/props/cloud.png"
 
 const SKY_TOP_A := Color(0.30, 0.27, 0.55)
 const SKY_TOP_B := Color(0.47, 0.67, 0.93)
@@ -44,6 +45,7 @@ var _clouds: Array = []
 var _tower_done := false
 var _village_tex: Texture2D
 var _tower_tex: Texture2D
+var _cloud_tex: Texture2D
 
 
 func _ready() -> void:
@@ -54,6 +56,8 @@ func _ready() -> void:
 		_village_tex = load(VILLAGE_TEX) as Texture2D
 	if ResourceLoader.exists(TOWER_TEX):
 		_tower_tex = load(TOWER_TEX) as Texture2D
+	if ResourceLoader.exists(CLOUD_TEX):
+		_cloud_tex = load(CLOUD_TEX) as Texture2D
 	_back = _make_row(rng, 0.62, 90.0)
 	_front = _make_row(rng, 1.0, 0.0)
 	for i in 7:
@@ -156,6 +160,11 @@ func _draw_sun(k: float) -> void:
 
 
 func _draw_cloud(pos: Vector2, w: float, a: float) -> void:
+	if _cloud_tex:
+		var h := w * float(_cloud_tex.get_height()) / float(_cloud_tex.get_width())
+		draw_texture_rect(_cloud_tex, Rect2(pos - Vector2(w, h) * 0.5, Vector2(w, h)),
+			false, Color(1.0, 1.0, 1.0, a))
+		return
 	var col := Color(1.0, 0.98, 0.96, a)
 	draw_circle(pos, w * 0.22, col)
 	draw_circle(pos + Vector2(-w * 0.24, w * 0.06), w * 0.17, col)

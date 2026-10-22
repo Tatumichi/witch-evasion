@@ -6,6 +6,7 @@ extends Node2D
 enum Kind { HAT, POP }
 
 const FONT := preload("res://assets/fonts/MPLUSRounded1c-Bold.ttf")
+const HAT_TEX := "res://assets/props/hat.png"
 const HAT := Color(0.42, 0.30, 0.62)
 const HAT_DARK := Color(0.28, 0.18, 0.44)
 
@@ -16,6 +17,12 @@ var vel := Vector2.ZERO
 var life := 1.0
 
 var _t := 0.0
+var _tex: Texture2D
+
+
+func _ready() -> void:
+	if ResourceLoader.exists(HAT_TEX):
+		_tex = load(HAT_TEX) as Texture2D
 
 
 func setup_hat(pos: Vector2) -> void:
@@ -51,6 +58,11 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	if kind == Kind.HAT:
+		if _tex:
+			var w := 48.0
+			var h := w * float(_tex.get_height()) / float(_tex.get_width())
+			draw_texture_rect(_tex, Rect2(-Vector2(w, h) * 0.5, Vector2(w, h)), false)
+			return
 		draw_colored_polygon(PackedVector2Array([Vector2(-22.0, 8.0), Vector2(22.0, 8.0), Vector2(16.0, 13.0), Vector2(-16.0, 13.0)]), HAT_DARK)
 		draw_colored_polygon(PackedVector2Array([Vector2(-12.0, 8.0), Vector2(10.0, 8.0), Vector2(-4.0, -26.0)]), HAT)
 		draw_rect(Rect2(-11.0, 2.0, 21.0, 5.0), Color(0.55, 0.92, 0.80))

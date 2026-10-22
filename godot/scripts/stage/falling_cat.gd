@@ -17,12 +17,16 @@ const TABBY_STRIPE := Color(0.78, 0.42, 0.16)
 const WHITE_CAT := Color(0.98, 0.97, 0.95)
 const LINE := Color(0.25, 0.16, 0.22, 0.95)
 const BUBBLE := Color(1.0, 1.0, 1.0, 0.94)
+const TABBY_TEX := "res://assets/props/cat_tabby.png"
+const WHITE_TEX := "res://assets/props/cat_white.png"
 
 var fur: int = Fur.TABBY
 var source := ""
 
 var _falling := false
 var _t := 0.0
+var _tex_tabby: Texture2D
+var _tex_white: Texture2D
 var _vy := 60.0
 var _from_top := true
 var _warn_pos := Vector2.ZERO
@@ -71,6 +75,13 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 
+func _ready() -> void:
+	if ResourceLoader.exists(TABBY_TEX):
+		_tex_tabby = load(TABBY_TEX) as Texture2D
+	if ResourceLoader.exists(WHITE_TEX):
+		_tex_white = load(WHITE_TEX) as Texture2D
+
+
 func _draw() -> void:
 	if not _falling:
 		_draw_bubble()
@@ -99,6 +110,14 @@ func _draw_bubble() -> void:
 
 
 func _draw_cat(o: Vector2, hanging: bool) -> void:
+	var tex: Texture2D = _tex_tabby if fur == Fur.TABBY else _tex_white
+	if tex:
+		var w := 46.0
+		var h := w * float(tex.get_height()) / float(tex.get_width())
+		draw_set_transform(o + Vector2(0.0, 12.0), sin(_t * 9.0) * 0.10, Vector2.ONE)
+		draw_texture_rect(tex, Rect2(-Vector2(w, h) * 0.5, Vector2(w, h)), false)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
 	var c := TABBY if fur == Fur.TABBY else WHITE_CAT
 	var flail := sin(_t * 18.0) * 6.0
 	# 手足（落ちている間はじたばた）
