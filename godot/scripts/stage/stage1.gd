@@ -47,6 +47,9 @@ func sections() -> Array:
 func make_boss() -> Node2D:
 	return BossScript.new()
 
+func boss_gauge_label() -> String:
+	return "大風見鶏の満足ゲージ"
+
 func boss_cat() -> Array:
 	return [Fur.TABBY, "大風見鶏のとさかから"]
 

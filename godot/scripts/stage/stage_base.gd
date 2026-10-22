@@ -10,6 +10,9 @@ extends Node2D
 ## 起動オプション（撮影・確認用。`godot --path godot -- --start` のように渡す）:
 ##   --start : タイトルを飛ばして開始     --boss : ボス戦から開始     --god : 被弾しない
 ##   --symbol=happy|angry|dizzy : ボスの状態記号を強制（ボスが debug_symbol を持つとき）
+##   --stage=N : STAGE N から始める（--boss / --god と組み合わせ可）
+##
+## ステージの解放・ベストスコア・ステージ間の移動は autoload の GameState（scripts/game_state.gd）。
 ##
 ## 効果音は Sfx.fire で鳴らす（一覧は docs/sound_effects.md）。BGM は BGM ノード（bgm.gd）が state を見て切り替える。
 
@@ -30,8 +33,6 @@ const COURAGE_PER_HAT := 50
 const CAT_EFFECT_TIME := 15.0
 const CANDY_INTERVAL := 0.2
 
-const SAVE_PATH := "user://witch_stage.cfg"
-
 enum State { TITLE, INTRO, ROAD, BOSS_INTRO, BOSS, CLEAR, FAINT }
 enum Fur { TABBY, WHITE }
 
@@ -39,6 +40,8 @@ enum Fur { TABBY, WHITE }
 @onready var world: Node2D = $World
 @onready var player = $World/Player
 @onready var hud = $HUD
+## autoload の GameState。--script のテストでもコンパイルできるよう、グローバル名ではなくノードで引く。
+@onready var _gs: Node = _find_game_state()
 
 var state: int = State.TITLE
 var road_t := 0.0
@@ -130,6 +133,10 @@ func make_boss() -> Node2D:
 func boss_cat() -> Array:
 	return [Fur.TABBY, ""]
 
+## ボスの満足ゲージの見出し
+func boss_gauge_label() -> String:
+	return "満足ゲージ"
+
 ## ボス登場時の効果音
 func se_boss_appear() -> String:
 	return "boss_appear"
@@ -167,10 +174,20 @@ func stage_ready() -> void:
 
 # ================================================================ 起動
 
+func _find_game_state() -> Node:
+	var gs := get_node_or_null("/root/GameState")
+	if gs == null:
+		# autoload が無い起動のされ方（単体のシーン実行など）でも動くようにする
+		gs = load("res://scripts/game_state.gd").new()
+		gs.name = "GameState"
+		get_tree().root.add_child.call_deferred(gs)
+	return gs
+
+
 func _ready() -> void:
 	_rng.randomize()
 	scroll = scroll_speed()
-	best = _load_best()
+	best = _gs.best(stage_number())
 	player.damaged.connect(_on_damaged)
 	player.cat_caught.connect(_on_cat_caught)
 	player.courage_got.connect(_on_courage)
@@ -180,6 +197,13 @@ func _ready() -> void:
 
 	var args := OS.get_cmdline_user_args()
 	god_mode = "--god" in args
+	var want := 0
+	for a in args:
+		if a.begins_with("--stage="):
+			want = int(a.substr(8))
+	if want > 0 and want != stage_number() and _gs.has_stage(want):
+		_gs.goto_stage(want, "--boss" not in args)
+		return
 	if "--boss" in args:
 		await get_tree().process_frame
 		start_stage()
@@ -189,7 +213,8 @@ func _ready() -> void:
 				await get_tree().create_timer(0.3).timeout
 				if _boss and _boss.has_method("debug_symbol"):
 					_boss.debug_symbol(a.split("=")[1])
-	elif "--start" in args:
+	elif "--start" in args or want == stage_number() or _gs.autostart:
+		_gs.autostart = false
 		await get_tree().process_frame
 		start_stage()
 
@@ -201,7 +226,15 @@ func _enter_title() -> void:
 	_clear_world()
 	player.spawn_at(START_POS)
 	background.reset()
+	if not _gs.is_unlocked(_gs.selected):
+		_gs.selected = 1
 	hud.show_title(best)
+	_refresh_title()
+
+
+func _refresh_title() -> void:
+	var n: int = _gs.selected
+	hud.set_title_stage(n, _gs.stage_name(n), _gs.is_unlocked(n), _gs.best(n), _gs.has_stage(n - 1), _gs.has_stage(n + 1))
 
 
 ## タイトルから、または最初からやり直すときに呼ぶ。
@@ -275,7 +308,7 @@ func _enter_boss_intro() -> void:
 func _begin_boss() -> void:
 	_set_state(State.BOSS)
 	_boss.begin_fight()
-	hud.show_boss_gauge(true)
+	hud.show_boss_gauge(true, boss_gauge_label())
 	Sfx.fire(self, "gauge_show", {"delay": 0.15})
 	hud.set_boss_gauge(0.0)
 
@@ -343,19 +376,21 @@ func _show_result() -> void:
 	var is_best := score > best
 	if is_best:
 		best = score
-		_save_best()
+	_gs.record_clear(stage_number(), score)
 	hud.set_score(score)
 	for i in 5:
 		Sfx.fire(self, "result_line", {"delay": 0.12 * i, "pitch": pow(2.0, [0, 2, 4, 5, 7][i] / 12.0)})
 	if is_best:
 		Sfx.fire(self, "new_best", {"delay": 0.75})
+	var next := stage_number() + 1
+	var hint := "SPACE で STAGE %d へ" % next if _gs.has_stage(next) else "SPACE でタイトルへ"
 	hud.show_result([
 		"スコア　%d%s" % [score, "　NEW BEST!" if is_best else ""],
 		"救った猫　%d / %d" % [cats_saved, cats_total()],
 		"勇気のかけら　%d" % courage,
 		"被弾　%d" % hits_taken,
 		"クリアボーナス　+%d" % bonus,
-	])
+	], "STAGE %d CLEAR!" % stage_number(), hint)
 
 
 func _clear_world() -> void:
@@ -720,6 +755,15 @@ func _cooldown_ok(key: String, seconds: float) -> bool:
 # ================================================================ 入力・保存
 
 func _unhandled_input(event: InputEvent) -> void:
+	# タイトルでは ←→ でステージを選ぶ（まだ遊べないステージも見えるが、始められない）
+	if state == State.TITLE and (event.is_action_pressed("move_left") or event.is_action_pressed("move_right")):
+		var n: int = _gs.selected + (-1 if event.is_action_pressed("move_left") else 1)
+		if _gs.has_stage(n):
+			_gs.selected = n
+			_refresh_title()
+			Sfx.fire(self, "pop_score")
+		return
+
 	var advance := false
 	if event is InputEventKey and event.pressed and not event.echo:
 		advance = event.keycode == KEY_SPACE or event.keycode == KEY_ENTER
@@ -729,25 +773,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match state:
 		State.TITLE:
+			var n: int = _gs.selected
+			if not _gs.is_unlocked(n):
+				return
 			Sfx.fire(self, "ui_start")
-			start_stage()
+			if n == stage_number():
+				start_stage()
+			else:
+				_gs.goto_stage(n, true)
 		State.FAINT:
 			if _state_t >= 0.8:
 				_restart_after_faint()
 		State.CLEAR:
 			if hud.is_result_visible():
-				_enter_title()
-
-
-func _load_best() -> int:
-	var cfg := ConfigFile.new()
-	if cfg.load(SAVE_PATH) == OK:
-		return int(cfg.get_value("stage%d" % stage_number(), "best", 0))
-	return 0
-
-
-func _save_best() -> void:
-	var cfg := ConfigFile.new()
-	cfg.load(SAVE_PATH)
-	cfg.set_value("stage%d" % stage_number(), "best", best)
-	cfg.save(SAVE_PATH)
+				var next := stage_number() + 1
+				if _gs.has_stage(next):
+					_gs.goto_stage(next, true)
+				else:
+					_enter_title()

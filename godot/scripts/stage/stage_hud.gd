@@ -36,6 +36,7 @@ var _effect_bar: MeterBar
 
 var _boss_box: Control
 var _boss_bar: MeterBar
+var _boss_label: Label
 
 var _say_box: PanelContainer
 var _say_name: Label
@@ -54,9 +55,11 @@ var _title_panel: Control
 var _title_card: TextureRect
 var _title_prompt: Label
 var _title_best: Label
+var _title_stage: Label
 
 var _faint_panel: Control
 var _result_panel: Control
+var _result_title: Label
 var _result_lines: Label
 var _result_hint: Label
 
@@ -176,11 +179,11 @@ func _build_status() -> void:
 	_boss_box.size = Vector2(300.0, 50.0)
 	_boss_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_boss_box)
-	var bl := _label(16, Color(1.0, 0.86, 0.92))
-	bl.text = "大風見鶏の満足ゲージ"
-	bl.size = Vector2(300.0, 22.0)
-	bl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_boss_box.add_child(bl)
+	_boss_label = _label(16, Color(1.0, 0.86, 0.92))
+	_boss_label.text = "大風見鶏の満足ゲージ"
+	_boss_label.size = Vector2(300.0, 22.0)
+	_boss_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_box.add_child(_boss_label)
 	_boss_bar = MeterBar.new()
 	_boss_bar.position = Vector2(0.0, 26.0)
 	_boss_bar.size = Vector2(300.0, 12.0)
@@ -280,12 +283,20 @@ func _build_overlays() -> void:
 		fb.size = Vector2(540.0, 60.0)
 		fb.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_title_panel.add_child(fb)
-	var sub := _label(26, Color(1.0, 0.90, 0.80), 7)
-	sub.text = "見習い魔女メルル　STAGE 1「村の空」"
-	sub.position = Vector2(0.0, 282.0)
-	sub.size = Vector2(540.0, 36.0)
+	var sub := _label(20, Color(1.0, 0.90, 0.80), 6)
+	sub.text = "見習い魔女メルル"
+	sub.position = Vector2(0.0, 268.0)
+	sub.size = Vector2(540.0, 28.0)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_panel.add_child(sub)
+	# 選んでいるステージ。←→ で切り替える（set_title_stage）
+	_title_stage = _label(26, Color(1.0, 0.90, 0.80), 7)
+	_title_stage.name = "TitleStage"
+	_title_stage.text = "STAGE 1「村の空」"
+	_title_stage.position = Vector2(0.0, 296.0)
+	_title_stage.size = Vector2(540.0, 36.0)
+	_title_stage.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_panel.add_child(_title_stage)
 	_title_card = TextureRect.new()
 	_title_card.texture = _tex(CARD_PATH)
 	_title_card.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -330,12 +341,12 @@ func _build_overlays() -> void:
 	# クリア結果
 	_result_panel = _full_panel(Color(0.06, 0.04, 0.12, 0.62))
 	_result_panel.name = "ResultPanel"
-	var rt := _label(52, Color(1.0, 0.92, 0.70), 10)
-	rt.text = "STAGE 1 CLEAR!"
-	rt.position = Vector2(0.0, 250.0)
-	rt.size = Vector2(540.0, 70.0)
-	rt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_panel.add_child(rt)
+	_result_title = _label(52, Color(1.0, 0.92, 0.70), 10)
+	_result_title.text = "STAGE 1 CLEAR!"
+	_result_title.position = Vector2(0.0, 250.0)
+	_result_title.size = Vector2(540.0, 70.0)
+	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_result_panel.add_child(_result_title)
 	_result_lines = _label(26, TEXT, 6)
 	_result_lines.position = Vector2(0.0, 350.0)
 	_result_lines.size = Vector2(540.0, 260.0)
@@ -384,6 +395,21 @@ func show_title(best: int) -> void:
 	_say_box.visible = false
 	_god_box.visible = false
 	_title_best.text = "BEST  %d" % best if best > 0 else ""
+
+
+## タイトルで選んでいるステージの表示。複数ステージがあるときは ◀ ▶ と操作の案内を出す。
+func set_title_stage(n: int, stage_name: String, is_unlocked: bool, best: int, has_prev: bool, has_next: bool) -> void:
+	var left := "◀　" if has_prev else ""
+	var right := "　▶" if has_next else ""
+	_title_stage.text = "%sSTAGE %d「%s」%s" % [left, n, stage_name, right]
+	_title_stage.modulate.a = 1.0 if is_unlocked else 0.5
+	var pick := "　　←→ でステージ選択" if (has_prev or has_next) else ""
+	if is_unlocked:
+		_title_best.text = ("BEST  %d" % best if best > 0 else "") + pick
+		_title_prompt.text = "SPACE / クリックでスタート"
+	else:
+		_title_best.text = "STAGE %d をクリアすると遊べます" % (n - 1)
+		_title_prompt.text = "（まだ遊べません）"
 
 
 func show_play() -> void:
@@ -446,8 +472,10 @@ func set_cat_effect(fur: int, ratio: float) -> void:
 	_effect_bar.value = ratio
 
 
-func show_boss_gauge(v: bool) -> void:
+func show_boss_gauge(v: bool, label := "") -> void:
 	_boss_box.visible = v
+	if label != "":
+		_boss_label.text = label
 
 
 func set_boss_gauge(v: float) -> void:
@@ -485,7 +513,9 @@ func show_faint(v: bool) -> void:
 	_faint_panel.visible = v
 
 
-func show_result(lines: Array) -> void:
+func show_result(lines: Array, title := "STAGE 1 CLEAR!", hint := "SPACE でタイトルへ") -> void:
+	_result_title.text = title
+	_result_hint.text = hint
 	_result_lines.text = "\n".join(PackedStringArray(lines))
 	_result_panel.visible = true
 	_boss_box.visible = false
