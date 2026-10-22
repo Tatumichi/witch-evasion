@@ -178,12 +178,14 @@ func _run() -> void:
 	_check(hud.is_result_visible(), "リザルト表示")
 	_heard(["result_line", "new_best"], "リザルトの行と NEW BEST")
 
-	# --- 42 音すべてに鳴る場面がある
+	# --- STAGE 1 用の音はすべて、どこかで鳴る（STAGE 2 の音は sfx.gd の FALLBACK に名前がある。
+	#     STAGE 2 の音は verify_stage2.gd で確かめる）
+	var not_stage1: Array = _sfx.FALLBACK.keys()
 	var all: Array[String] = []
 	for f in DirAccess.get_files_at(SE_DIR):
-		if f.ends_with(".wav"):
+		if f.ends_with(".wav") and not (f.get_basename() in not_stage1):
 			all.append(f.get_basename())
-	_heard(all, "用意した %d 音がすべてどこかで鳴る" % all.size())
+	_heard(all, "STAGE 1 用の %d 音がすべてどこかで鳴る" % all.size())
 	print("     counts = %s" % str(_sfx.counts))
 
 	quit(1 if _failed else 0)

@@ -4,9 +4,9 @@ extends "res://scripts/stage/stage_base.gd"
 ## 綿毛の嵐・風船・渡り鳥の V 字・画面端の風車。ボスは「はぐれ大風車」。スクロールは 1.1 倍。
 ## 共通の進行（帽子・猫・キャンディ・やり直し・ボス戦の流れ・結果）は stage_base.gd。
 ##
-## 効果音は STAGE 1 の 42 音を流用している。専用にしたい音は専用の名前で鳴らし、ファイルが無いあいだは
-## sfx.gd の FALLBACK が既存音に振り替える（割り当ては docs/sound_effects.md の「STAGE 2」）。
-## BGM は専用曲ができるまで STAGE 1 の曲を流す（bgm_track）。
+## 効果音は STAGE 1 と共通の音に加え、専用の名前の 11 音（風船・綿毛・渡り鳥・風車・大木・ボス）を鳴らす。
+## 専用のファイルが無いときは sfx.gd の FALLBACK が既存音に振り替える（一覧は docs/sound_effects.md の「STAGE 2」）。
+## BGM は専用曲「丘と森の上空」「はぐれ大風車」（bgm_track。ファイルが無ければ STAGE 1 の曲）。
 
 const FluffScript := preload("res://scripts/stage/fluff.gd")
 const BalloonScript := preload("res://scripts/stage/balloon.gd")

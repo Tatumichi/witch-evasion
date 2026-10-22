@@ -497,6 +497,157 @@ def _():
 
 # ---------------------------------------------------------------- 書き出し
 
+# ---------------------------------------------------------------- STAGE 2「丘と森の上空」
+# ここから下の音は、それぞれ自分の乱数（seed 固定）を使う。STAGE 1 の 42 音の結果を変えないため。
+
+def rng(seed):
+    return np.random.default_rng(seed)
+
+def nz(d, seed):
+    return rng(seed).standard_normal(int(d * SR))
+
+def honk(f0=330, d=0.22, seed=0):
+    """雁の「がー」。鼻にかかった声（ノコギリ波＋鼻音のフォルマント）、音程は少し下がる。"""
+    t = T(d); u = t / d
+    f = f0 * (1.08 - 0.16 * u) * (1 + 0.012 * np.sin(2 * np.pi * 23 * t))
+    src = osc(f, 'saw') + 0.12 * nz(d, seed)
+    y = svf(src, 750, 5) + 0.9 * svf(src, 1500, 7) + 0.35 * svf(src, 2900, 6) - 0.4 * svf(src, 1000, 9)
+    env = np.interp(u, [0, .08, .6, 1], [0, 1, .8, 0])
+    return y * env
+
+def big_flap(seed=0, d=0.11):
+    """大きな鳥の羽ばたき 1 回（鳩より低く長い）。"""
+    x = bandpass(nz(d, seed), 250, 1500) * np.exp(-T(d) / 0.035)
+    return x * adsr(len(x), 0.006)
+
+def wood_knock(f=180, d=0.35, seed=0):
+    """木の「ごとん」。低い打撃＋木の共鳴。"""
+    hit = lowpass(nz(0.02, seed), 1200) * np.exp(-T(0.02) / 0.004)
+    t = T(d)
+    body = sum(a * np.sin(2 * np.pi * f * r * t) * np.exp(-t / dec)
+               for r, a, dec in ((1.0, 1.0, 0.09), (2.3, 0.5, 0.05), (3.9, 0.25, 0.03)))
+    return mix((hit, 0, 0.6), (body, 0.002, 1.0))
+
+def periodic(length, events):
+    """length 秒のループ用バッファに events [(信号, 開始秒, 音量)] を置く。はみ出した分は頭に回す（継ぎ目なし）。"""
+    n = int(length * SR)
+    out = np.zeros(n)
+    for x, s, g in events:
+        i = int(s * SR) % n
+        k = 0
+        while k < len(x):
+            m = min(len(x) - k, n - i)
+            out[i:i + m] += x[k:k + m] * g
+            k += m; i = 0
+    return out
+
+@se('balloon_pop', -3)
+def _():
+    # ぱんっ: 鋭い破裂（高域のノイズが一瞬）＋ゴムが縮む音（音程が急に下がる）＋小さな空気の抜け
+    burst = highpass(nz(0.07, 201), 700) * np.exp(-T(0.07) / 0.014)
+    snap = osc(glide(1400, 380, 0.06)) * np.exp(-T(0.06) / 0.02)
+    thump = lowpass(nz(0.08, 202), 260) * np.exp(-T(0.08) / 0.025)
+    air = whoosh(0.12, 3500, 1500, 1.0) * 0.12
+    x = mix((burst, 0, 1.0), (snap, 0.001, 0.6), (thump, 0, 0.9))
+    # 鋭すぎる山を丸めて短くても聞こえる大きさにし、丸めで伸びた後ろはもう一度すぐ減衰させる
+    x = np.tanh(3.0 * x / np.abs(x).max()) * np.exp(-T(len(x) / SR) / 0.03)
+    return reverb(mix((x, 0, 1), (air, 0.01, 1)), 0.3, 0.12)
+
+@se('balloon_rise', -6)
+def _():
+    # きゅっ…: ゴムがこすれる短い音。音程が上がって少し戻る、こすれのざらつき（細かい振幅の揺れ）
+    d = 0.26; t = T(d); u = t / d
+    f = hz('Bb5') * (1 + 0.5 * np.sin(np.pi * np.minimum(u * 1.3, 1)) ** 1.5)
+    grit = 0.55 + 0.45 * np.sign(np.sin(2 * np.pi * 55 * t)) * (rng(203).random(len(t)) > 0.3)
+    x = osc(f, 'tri') * grit
+    x = bandpass(x, 700, 4500)
+    env = np.interp(u, [0, .1, .55, 1], [0, 1, .7, 0])
+    return x * env
+
+@se('fluff_storm_loop', -8, loop=True)
+def _():
+    # ふわふわ舞う軽い風: 高めの帯域の柔らかい風＋ときどき小さな「ふわっ」。洗濯物のばさばさは入れない
+    L = 4.3
+    w = wind(L, 900, 2600, 0.6, seed=210) * 0.7 + lowpass(nz(L, 211), 400) * 0.15
+    r = rng(212)
+    for k in range(9):
+        s = 0.2 + k * 0.45 + r.uniform(0, 0.15)
+        p = whoosh(0.22, r.uniform(2500, 4000), r.uniform(1200, 1800), 1.2) * 0.35
+        i = int(s * SR); w[i:i + len(p)] += p[:len(w) - i]
+    return seamless(w, 0.3)
+
+@se('geese_scatter', -4)
+def _():
+    flaps = [(big_flap(220 + k), k * 0.07 + rng(221 + k).uniform(0, 0.02), 1 - k / 12) for k in range(9)]
+    return mix(*flaps, (honk(340, 0.2, 222), 0.12, 0.7), (honk(300, 0.24, 223), 0.34, 0.55))
+
+@se('windmill_loop', -8, loop=True)
+def _():
+    # ぎぃ…ごとん: 木の大きな軋み（ゆっくりのスティックスリップ、木の低い共鳴）と、羽根が一回りするごとの「ごとん」
+    L = 2.0
+    sq = creak(1.1, np.interp(T(1.1), [0, 1.1], [35, 70]), (260, 520, 950), 0.3, seed=230)
+    sq *= np.sin(np.pi * T(1.1) / 1.1) ** 1.2
+    return periodic(L, [(sq, 0.15, 1.0), (wood_knock(150, 0.4, 231), 1.45, 0.9)])
+
+@se('boss2_start', -2)
+def _():
+    # ごごん…: 大きな木の歯車がかみ合う。重い打撃が 2 つ、歯が噛む細かい音、低い唸り
+    clicks = [(wood_knock(420 + 30 * k, 0.08, 240 + k) * 0.25, 0.05 + k * 0.045, 1) for k in range(6)]
+    g1 = wood_knock(90, 0.9, 246)
+    g2 = wood_knock(70, 1.2, 247)
+    rumble = lowpass(nz(1.8, 248), 120) * np.interp(T(1.8), [0, .4, 1.8], [0, 1, 0])
+    return reverb(mix(*clicks, (g1, 0.32, 1.0), (g2, 0.62, 1.1), (rumble, 0.3, 0.6)), 1.0, 0.3)
+
+@se('boss2_blades_loop', -8, loop=True)
+def _():
+    # windmill_loop より低く重い軋み＋大きな羽根が風を切る「ぶぉん」（2 秒で 2 回）
+    L = 2.0
+    sq = creak(1.6, np.interp(T(1.6), [0, 1.6], [22, 40]), (150, 330, 640), 0.3, seed=250)
+    sq *= np.sin(np.pi * T(1.6) / 1.6)
+    swish = lambda seed: svf(nz(0.6, seed), glide(250, 700, 0.6), 2.0) * np.sin(np.pi * T(0.6) / 0.6) ** 2
+    return periodic(L, [(sq, 0.1, 0.8), (swish(251), 0.0, 0.9), (swish(252), 1.0, 0.9),
+                        (wood_knock(100, 0.5, 253), 1.7, 0.6)])
+
+@se('geese_incoming', -6)
+def _():
+    parts = []
+    for b in range(4):          # 4 羽ぶん、ゆっくり大きく
+        for k in range(6):
+            parts.append((big_flap(260 + b * 10 + k), b * 0.07 + k * 0.14 + rng(270 + b * 10 + k).uniform(0, 0.015),
+                          0.5 + 0.5 * np.sin(np.pi * k / 5)))
+    parts.append((honk(360, 0.18, 280) * 0.5, 0.5, 1))
+    return mix(*parts)
+
+@se('fluff_pop', -10)
+def _():
+    # ふわっ: 柔らかく上へ抜ける空気＋ごく小さなきらめき
+    d = 0.28
+    air = svf(nz(d, 290), glide(1200, 4000, d), 1.0) * np.sin(np.pi * T(d) / d) ** 1.5
+    return mix((air, 0, 1), (bell(hz('Eb7'), 0.25, 0.4, 0.06), 0.06, 0.12))
+
+@se('flour_throw', -6)
+def _():
+    # ひゅっ: 重い袋が飛ぶ（低めの風切り）＋袋の布がはためく
+    d = 0.4
+    swish = svf(nz(d, 300), glide(1200, 320, d), 1.6) * np.sin(np.pi * T(d) / d) ** 1.2
+    cloth = bandpass(nz(d, 301), 400, 2000) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 18 * T(d)))) \
+        * np.sin(np.pi * T(d) / d) * 0.25
+    return mix((swish, 0, 1), (cloth, 0.03, 1))
+
+@se('tree_rustle', -4)
+def _():
+    # ざわざわ: 葉擦れ（細かいノイズの粒が寄せて返す）＋遠くの小鳥。STAGE 1 の教会の鐘にあたる目印
+    d = 1.8; r = rng(310)
+    out = np.zeros(int(d * SR))
+    swell = np.interp(T(d), [0, .5, 1.1, 1.8], [0.15, 1, .7, 0])
+    for k in range(260):
+        s = r.uniform(0, d - 0.05)
+        g = bandpass(r.standard_normal(int(0.03 * SR)), 2000, 7000) * np.exp(-T(0.03) / 0.008)
+        i = int(s * SR); out[i:i + len(g)] += g * r.uniform(.3, 1) * swell[i]
+    out += bandpass(nz(d, 311), 600, 2500) * swell * 0.25
+    birds = [(chirp(hz(nm), hz(nm) * 1.12, 0.06) * 0.25, s, 1) for nm, s in (('Bb6', 0.7), ('Eb7', 0.82), ('Bb6', 1.25))]
+    return mix((out, 0, 1), *birds)
+
 # 聞こえの大きさの目標（最も大きい 100ms 区間の RMS, dBFS）。
 # 予告・危険は大きめ、連発するもの・UI は小さめ。ピークは -1dBFS を超えないようにする。
 LOUD = {
@@ -508,6 +659,10 @@ LOUD = {
     'boss_koke': -17, 'arrow_volley': -14, 'gust_warning': -13, 'gust': -14, 'storm_loop': -18,
     'boss_satisfied': -13, 'boss_leave': -22, 'god_voice': -18, 'ui_start': -14, 'stage_card': -16,
     'talk_meruru': -24, 'talk_god': -19, 'pop_score': -24, 'gauge_show': -21, 'result_line': -17, 'new_best': -13,
+    # STAGE 2
+    'balloon_pop': -12, 'balloon_rise': -16, 'fluff_storm_loop': -20, 'geese_scatter': -15, 'windmill_loop': -22,
+    'boss2_start': -11, 'boss2_blades_loop': -20, 'geese_incoming': -15, 'fluff_pop': -21, 'flour_throw': -16,
+    'tree_rustle': -15,
 }
 
 def loudness_db(x):
