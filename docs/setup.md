@@ -207,6 +207,25 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools/comfy.py img2img ^
 同じ `--fit / --canvas / --origin` で `prepare_sprite.py` に通せば、通常スプライトと原点・縮尺が揃う。
 被弾差分はこれで作り、`player.gd` が `die()` で `witch_hit.png` に切り替える。
 
+### UI 素材（`tools/make_ui_art.py`）
+
+タイトル用のロゴと立ち絵カードを Pillow で生成する（ComfyUI 不要）。
+
+```bash
+C:\AI\ComfyUI\.venv\Scripts\python.exe tools/make_ui_art.py
+# -> godot/assets/ui/logo.png         "WITCH" / "EVASION" の 2 段組み（Segoe UI Black）
+# -> godot/assets/ui/title_witch.png  角丸カード・発光枠・夜空背景
+```
+
+| 処理 | 内容 |
+|---|---|
+| ロゴ | 2 倍解像度で描いて縮小（アンチエイリアス）。白→ピンク→紫のグラデーション、暗い縁取り、紫とピンクの二重グロー |
+| カード | 承認済み立ち絵の白背景を抜き、深紫グラデ＋星＋床の照り返しの上に配置。足元に残る影は「床の影」として活用 |
+| 差し替え | 文字・色・サイズはスクリプト冒頭の定数で調整 |
+
+タイトル画面は `hud.gd` が `TextureRect` として読み込み、カードをゆっくり浮かせ、
+開始プロンプトを明滅させる。画像が無い場合はテキスト表示にフォールバックする。
+
 > **注意**: 生成した絵をそのままゲームに使う場合、モデルのライセンス（商用可否）を必ず確認。
 
 ---

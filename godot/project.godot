@@ -1,11 +1,11 @@
 ; Engine configuration file.
-; Witch Flight — 2D vertical scrolling dodge action.
+; Witch Evasion — 2D vertical scrolling dodge action.
 
 config_version=5
 
 [application]
 
-config/name="Witch Flight"
+config/name="Witch Evasion"
 config/description="夜空を飛ぶ魔女の少女。降ってくる障害物をよけて飛び続けろ。"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")

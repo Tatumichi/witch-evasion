@@ -63,6 +63,7 @@ func _enter_ready() -> void:
 	_over_cd = 0.0
 	_clear_world()
 	player.spawn_at(START_POS)
+	background.show_moon = false
 	hud.set_score(0)
 	hud.show_ready(best)
 
@@ -81,6 +82,7 @@ func _start() -> void:
 	_spawn_cd = 1.0
 	_pickup_cd = 3.5
 	_shake = 0.0
+	background.show_moon = true
 	hud.set_score(0)
 	hud.hide_overlay()
 

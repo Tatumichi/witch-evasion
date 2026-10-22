@@ -9,6 +9,8 @@ const SKY_BOT := Color(0.27, 0.10, 0.29)
 const MOON := Vector2(398.0, 148.0)
 
 var scroll_speed := 180.0
+## タイトル表示中は月を隠してロゴの可読性を保つ。
+@export var show_moon := true
 
 var _t := 0.0
 var _stars: Array = []
@@ -84,13 +86,14 @@ func _draw() -> void:
 		draw_circle(s["pos"], float(s["r"]), Color(1.0, 0.96, 0.92, tw))
 
 	# 月（輪は細かく重ねてバンディングを消す）
-	for i in 40:
-		var k := float(i) / 39.0
-		draw_circle(MOON, lerpf(40.0, 150.0, k), Color(1.0, 0.85, 0.68, 0.006))
-	draw_circle(MOON, 40.0, Color(1.0, 0.94, 0.84, 0.95))
-	draw_circle(MOON + Vector2(-12.0, -9.0), 7.5, Color(0.93, 0.86, 0.79, 0.5))
-	draw_circle(MOON + Vector2(14.0, 11.0), 5.0, Color(0.93, 0.86, 0.79, 0.4))
-	draw_circle(MOON + Vector2(3.0, -24.0), 3.5, Color(0.93, 0.86, 0.79, 0.35))
+	if show_moon:
+		for i in 40:
+			var k := float(i) / 39.0
+			draw_circle(MOON, lerpf(40.0, 150.0, k), Color(1.0, 0.85, 0.68, 0.006))
+		draw_circle(MOON, 40.0, Color(1.0, 0.94, 0.84, 0.95))
+		draw_circle(MOON + Vector2(-12.0, -9.0), 7.5, Color(0.93, 0.86, 0.79, 0.5))
+		draw_circle(MOON + Vector2(14.0, 11.0), 5.0, Color(0.93, 0.86, 0.79, 0.4))
+		draw_circle(MOON + Vector2(3.0, -24.0), 3.5, Color(0.93, 0.86, 0.79, 0.35))
 
 	# 地平線のほのかな光（上下グラデーションで境目を消す）
 	var glow := PackedVector2Array([
