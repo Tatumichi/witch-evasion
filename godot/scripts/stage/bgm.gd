@@ -22,6 +22,9 @@ const TRACKS := {
 
 var _player: AudioStreamPlayer
 var _current := ""
+## ヘッドレス（検証・CI）では音を出さない。Godot は再生中のまま終了すると「resources still in use」を出すため。
+## どの曲を鳴らすかの判断と音量の変化はそのまま動くので、テストは current_track() と音量で確かめる。
+var _silent := DisplayServer.get_name() == "headless"
 var _last_state := -1
 var _tween: Tween
 
@@ -30,6 +33,13 @@ func _ready() -> void:
 	_player = AudioStreamPlayer.new()
 	_player.volume_db = volume_db
 	add_child(_player)
+
+
+## 終了時に再生中のままだと、ストリームの再生状態が解放されずに残る（--quit で警告が出る）。
+func _exit_tree() -> void:
+	_kill_tween()
+	_player.stop()
+	_player.stream = null
 
 
 func _process(_delta: float) -> void:
@@ -54,7 +64,7 @@ func _process(_delta: float) -> void:
 
 
 func _play(key: String, restart: bool) -> void:
-	if key == _current and _player.playing and not restart:
+	if key == _current and not restart:
 		_fade_to(volume_db, 0.4, false)
 		return
 	var stream := _load(key)
@@ -64,7 +74,8 @@ func _play(key: String, restart: bool) -> void:
 	_kill_tween()
 	_player.stream = stream
 	_player.volume_db = volume_db
-	_player.play()
+	if not _silent:
+		_player.play()
 
 
 func _load(key: String) -> AudioStream:
@@ -79,8 +90,21 @@ func _load(key: String) -> AudioStream:
 	return stream
 
 
+## 今鳴らしている曲（"road" / "boss"、止まっていれば ""）。
+func current_track() -> String:
+	return _current
+
+
+func current_stream() -> AudioStream:
+	return _player.stream if _current != "" else null
+
+
+func current_volume_db() -> float:
+	return _player.volume_db
+
+
 func _fade_to(db: float, sec: float, stop_after: bool) -> void:
-	if not _player.playing:
+	if _current == "":
 		return
 	_kill_tween()
 	_tween = create_tween()

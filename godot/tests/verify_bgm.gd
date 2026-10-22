@@ -30,38 +30,39 @@ func _wait(seconds: float) -> void:
 		await physics_frame
 
 
-func _player() -> AudioStreamPlayer:
-	return _scene.get_node("BGM").get_child(0) as AudioStreamPlayer
+func _bgm() -> Node:
+	return _scene.get_node("BGM")
 
 
+## ヘッドレスでは音は出さないので、どの曲を選んでいるかで確かめる。
 func _now_playing() -> String:
-	var p := _player()
-	return p.stream.resource_path if p.playing and p.stream else ""
+	var s: AudioStream = _bgm().current_stream()
+	return s.resource_path if s else ""
 
 
 func _run() -> void:
 	await _wait(0.2)
 	_check(_now_playing() == ROAD, "タイトルで道中曲が鳴る")
-	var road_stream := _player().stream as AudioStreamOggVorbis
+	var road_stream: AudioStreamOggVorbis = _bgm().current_stream()
 	_check(road_stream.loop and is_equal_approx(road_stream.loop_offset, 12.0), "道中曲は 12.0 秒の位置へループする")
 
-	var before := _player().stream
+	var before: AudioStream = _bgm().current_stream()
 	_scene.start_stage()
 	await _wait(0.2)
-	_check(_now_playing() == ROAD and _player().stream == before, "開始しても道中曲を頭から鳴らし直さない")
+	_check(_now_playing() == ROAD and _bgm().current_stream() == before, "開始しても道中曲を頭から鳴らし直さない")
 
 	_scene._enter_boss_intro()
 	await _wait(0.2)
 	_check(_now_playing() == BOSS, "ボス登場でボス曲に切り替わる")
-	var boss_stream := _player().stream as AudioStreamOggVorbis
+	var boss_stream: AudioStreamOggVorbis = _bgm().current_stream()
 	_check(boss_stream.loop and is_equal_approx(boss_stream.loop_offset, 4.186047), "ボス曲は 4.186 秒の位置へループする")
 
 	_scene._faint()
 	await _wait(1.0)
-	_check(_player().volume_db < -15.0, "気絶中は音量が下がる")
+	_check(_bgm().current_volume_db() < -15.0, "気絶中は音量が下がる")
 	_scene._restart_after_faint()
 	await _wait(0.2)
-	_check(_now_playing() == BOSS and _player().volume_db > -7.0, "ボス戦のやり直しでボス曲が元の音量で鳴る")
+	_check(_now_playing() == BOSS and _bgm().current_volume_db() > -7.0, "ボス戦のやり直しでボス曲が元の音量で鳴る")
 
 	_scene._set_state(Stage.State.CLEAR)
 	await _wait(3.0)
