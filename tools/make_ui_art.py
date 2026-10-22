@@ -22,7 +22,9 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from prepare_sprite import build_alpha, remove_white_background
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCE = os.path.join(ROOT, "art", "witch", "witch_chibi_s111.png")
+SOURCE = os.environ.get(
+    "UI_CARD_SOURCE", os.path.join(ROOT, "art", "witch", "witch_chibi_s111.png")
+)
 OUT_DIR = os.path.join(ROOT, "godot", "assets", "ui")
 
 FONT_BLACK = r"C:\Windows\Fonts\seguibl.ttf"
