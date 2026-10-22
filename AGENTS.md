@@ -7,7 +7,8 @@
 - **WITCH EVASION** — 見習い魔女メルルが空を上昇し、障害物をよける 2D 縦スクロールアクション
 - **Godot 4.7.2**（GDScript のみ・アドオンなし）/ 表示 540×960
 - 主人公: メルル・ポプリエ（12歳・高所恐怖症）。設定は `docs/witch_merulu_setting.md`
-- ステージ1「村の空」実装済み。`godot/scenes/stage1.tscn` がメインシーン
+- ステージ1「村の空」・ステージ2「丘と森の上空」実装済み。`godot/scenes/stage1.tscn` がメインシーン（タイトルで ←→ でステージ選択）
+- ステージ2の素材（画像・BGM・専用 SE）は未作成。仕様は `docs/stage2-assets.md`。決まった場所に置けばコードを変えずに差し替わる
 
 ## ディレクトリ
 
@@ -65,10 +66,13 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools/comfy.py gen --preset noobai --lora
 - `z_index` は親からの相対。背景 (-10) < 影 (-1) < キャラ (0) < HUD (CanvasLayer)
 - テストは `SceneTree` を継承した `--script` で書ける（例: `godot/tests/verify_shadow.gd`）
 - 音はヘッドレスでは鳴らさない（`bgm.gd`・`sfx.gd`）。音のテストは `SFX.counts` や `BGM.current_track()` で確かめる
-- SE を足すときは `Sfx.fire(self, "名前")`。直接 AudioStreamPlayer を作らない
+- SE を足すときは `Sfx.fire(self, "名前")`。直接 AudioStreamPlayer を作らない。専用音がまだ無い名前は `sfx.gd` の `FALLBACK` で既存音に振り替える
+- 新しいステージは `stage_base.gd` を継承し、冒頭の「ステージごとに上書きする」関数だけを書く。`game_state.gd` の `STAGES` に登録する（D-009・D-010）
+- ステージのスクリプトは `GameState` をグローバル名で書かない（`--script` のテストでコンパイルできない）。`_gs` を使う
+- 新しいテストは `GameState.debug_fresh()` を呼んで、開発者の保存データを読み書きしない
 
 ## 参照
 
 - 進め方: `docs/GAME_DEV_WORKFLOW.md`
-- アセット棚卸し: `docs/stage1-assets.md`
+- アセット棚卸し: `docs/stage1-assets.md`・ステージ2の素材の仕様: `docs/stage2-assets.md`
 - AI 生成の知見: `docs/ai-quality/`（01〜07）

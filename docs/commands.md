@@ -19,6 +19,12 @@ $GD --headless --path godot --fixed-fps 60 --script res://tests/verify_hitbox.gd
 $GD --headless --path godot --script res://tests/verify_shadow.gd
 $GD --headless --path godot --fixed-fps 60 --script res://tests/verify_bgm.gd
 $GD --headless --path godot --fixed-fps 60 --script res://tests/verify_sfx.gd
+$GD --headless --path godot --fixed-fps 60 --script res://tests/verify_stage2.gd   # STAGE 2 を通す（保存データは触らない）
+$GD --headless --path godot --fixed-fps 60 --script res://tests/verify_flow.gd     # 解放と STAGE 1 → 2（保存データは触らない）
+
+# ステージを指定して起動（--boss・--god と組み合わせ可）
+$GD --path godot -- --stage=2 --god
+$GD --path godot -- --stage=2 --boss
 
 # ボス確認（演出を飛ばして進入。--symbol は記号描画の強制）
 $GD --path godot --write-movie "$LOCALAPPDATA/Temp/boss/frame.png" --fixed-fps 30 --quit-after 80 -- --boss --symbol=happy

@@ -1,8 +1,10 @@
 # 効果音（SE）
 
-STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成）で、`godot/assets/audio/se/` にある。下の表の全 42 音をゲームに組み込み済み。
+効果音の一覧と、鳴らす場面。音源は第 1 稿（合成）で、`godot/assets/audio/se/` にある。下の表の全 42 音をゲームに組み込み済み。
+STAGE 2 は専用音を作らず、この 42 音を振り替えて鳴らしている（下の「STAGE 2」）。
 
-- 再生: `godot/scripts/stage/sfx.gd`（`stage1.tscn` の `SFX` ノード）。鳴らす側は `Sfx.fire(self, "hit", {"x": 位置, "pitch_jitter": 0.05})`、ループは `Sfx.loop_on(self, "vane_spin")` / `Sfx.loop_off(...)`（参照カウント）
+- 鳴らすところの関数は、全ステージ共通の進行（被弾・猫・キャンディ・結果など）が `stage_base.gd`、STAGE 1 固有（鳩・煙突・教会の鐘）が `stage1.gd`
+- 再生: `godot/scripts/stage/sfx.gd`（各ステージのシーンの `SFX` ノード）。鳴らす側は `Sfx.fire(self, "hit", {"x": 位置, "pitch_jitter": 0.05})`、ループは `Sfx.loop_on(self, "vane_spin")` / `Sfx.loop_off(...)`（参照カウント）
 - 検証: `godot --headless --path godot --fixed-fps 60 --script res://tests/verify_sfx.gd`（ステージを通して、各イベントで鳴ったかを `SFX.counts` で確かめる）
 - ヘッドレス実行では実際の音は出さない（Godot は再生中のまま終了すると警告を出すため）。鳴らす判断と記録はそのまま動く
 
@@ -16,7 +18,7 @@ STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成
 
 | ファイル | 場面 | 鳴らすところ | 音 | 優先度 |
 | --- | --- | --- | --- | --- |
-| `hit` | 被弾・帽子が飛ぶ | `stage1.gd` `_on_damaged` | ぽこっ＋帽子がひらっ | A |
+| `hit` | 被弾・帽子が飛ぶ | `stage_base.gd` `_on_damaged` | ぽこっ＋帽子がひらっ | A |
 | `hat_warning` | 帽子が残り 1 | 被弾後に `hats == 1` | 被弾音に重ねる短い警告 | B |
 | `faint` | 目を回す（気絶） | `_faint` | くるくる下がる音＋ひよこ | A |
 | `restart` | やり直し | `_restart_after_faint` | ふわっと立ち直る | C |
@@ -79,6 +81,36 @@ STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成
 | `result_line` | リザルトの 1 行 | `show_result` | ぽん（1 行ごと） | B |
 | `new_best` | NEW BEST | 最高スコア更新 | ファンファーレ | B |
 
+## STAGE 2「丘と森の上空」
+
+専用音はまだ無い。STAGE 2 のスクリプトは**専用の名前**で鳴らし、そのファイルが無いあいだは `sfx.gd` の `FALLBACK` が既存音に振り替える。`<名前>.wav` を置けば、コードを変えずにそちらが鳴る。作る音の仕様は `docs/stage2-assets.md` の「3. 効果音」。
+
+| 名前（専用音） | 場面 | 鳴らすところ | 今鳴っている音 |
+| --- | --- | --- | --- |
+| `balloon_pop` | 風船が割れる | `balloon.gd` `_pop` | `candy_fire`（音程 0.62・+3dB） |
+| `balloon_rise` | 風船が画面下から来る | `stage2.gd` `_spawn_balloon` | 無音 |
+| `fluff_storm_loop` | 綿毛の嵐が画面にあるあいだ。ループ | `fluff.gd`（嵐の綿毛、参照カウント） | `storm_loop` |
+| `fluff_pop` | 綿毛が吹き飛ぶ | `fluff.gd` `break_apart` | `laundry_pop`（音程 1.35） |
+| `geese_incoming` | 渡り鳥の隊列が来る | `stage2.gd` `_spawn_geese_v` | `pigeon_incoming`（音程 0.85） |
+| `geese_scatter` | 渡り鳥が逃げる | `goose.gd` `break_apart` | `pigeon_scatter`（音程 0.82） |
+| `windmill_loop` | 画面端の風車がいるあいだ。ループ | `windmill.gd`（参照カウント） | `vane_spin` |
+| `tree_rustle` | 森の大木を越える | `stage2.gd` `_on_tree_passed` | 無音 |
+| `boss2_start` | ボス戦開始 | `boss_windmill.gd` `begin_fight` | 無音 |
+| `boss2_blades_loop` | ボス戦のあいだ羽根が回る。ループ | `boss_windmill.gd` | `vane_spin` |
+| `flour_throw` | 小麦粉の袋を投げる | `boss_windmill.gd` `_throw_bag` | `arrow_volley`（音程 0.8・−3dB） |
+
+既存音をそのまま使っている場面:
+
+| 音 | 場面 | 鳴らすところ |
+| --- | --- | --- |
+| `gust_warning` → `gust` | 横風の予告 → 横風（風上に定位） | `stage2.gd` `start_wind` / `stage_process` |
+| `gust_warning` → `gust` | ボスの突風 | `boss_windmill.gd` |
+| `boss_appear` | ボス登場 | `stage_base.gd`（`se_boss_appear`） |
+| `smoke_in` | 小麦粉の袋が破れる | `flour_bag.gd` |
+| `boss_leave` | 帆をたたんで帰る | `boss_windmill.gd`（満足の 0.5 秒後） |
+
+検証: `verify_stage2.gd` が、専用の名前で頼んだことと、振り替え先が鳴ったことの両方を `SFX.counts` で確かめる。
+
 ## 再生のしくみ（sfx.gd）
 
 - **連発の間引き**: 同じ音の同時発音数を `MAX_VOICES` で制限（既定 2、キャンディ 2・鳩が逃げる 1 など）。上限に達したら一番古いものを鳴らし直す
@@ -86,5 +118,6 @@ STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成
 - **音程の揺らし**: キャンディ・煙突・洗濯物・鳩などは `pitch_jitter` で毎回少し変える。勇気のかけらは 0.6 秒以内に続けて拾うと半音ずつ上がる（最大 7 段）
 - **定位**: `x`（0〜540）で左右に置く。突風は風上から聞こえる
 - **ループ音**: `vane_spin`（小さな風見鶏が画面にいるあいだ、何羽いても 1 本）と `storm_loop`（STORM のあいだ）。`.wav.import` で `edit/loop_mode=2`。止めるときは 0.3 秒でフェード
+- **振り替え（FALLBACK）**: 専用音がまだ無い名前を既存音に振り替える。`[代わりの音, opts]` の opts は呼び出し側に重ねる（音程は掛け算、音量は足し算）。代わりが `""` なら鳴らさずに記録だけする。`SFX.counts` には頼まれた名前と実際に鳴らした名前の両方が残る。ループは頼まれた名前ごとに数える
 - **音量**: SE 全体は `volume_db = -3`。BGM は −6dB
 - **セリフのボイス**は別枠。「ひゃっ！」「けほっ」などに声を付けるかは別に決める
