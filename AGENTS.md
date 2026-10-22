@@ -15,7 +15,7 @@
 |---|---|
 | `godot/` | Godot プロジェクト本体（`godot/project.godot`） |
 | `godot/assets/` | 画像・フォント・音（`audio/bgm`・`audio/se`）。生成物はここへ |
-| `godot/scripts/` | ゲームロジック。`stage/` にステージ1の実装 |
+| `godot/scripts/` | ゲームロジック。`stage/` にステージの実装（共通の進行は `stage_base.gd`） |
 | `godot/tests/` | ヘッドレス検証スクリプト |
 | `tools/` | 画像生成・変換の Python（ComfyUI 連携）。音は `tools/music/`（BGM）・`tools/sfx/`（SE） |
 | `docs/` | 設計・設定・進捗・決定 |

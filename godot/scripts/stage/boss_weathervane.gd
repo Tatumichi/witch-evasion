@@ -75,6 +75,11 @@ func setup(world: Node2D, rng: RandomNumberGenerator, scroll: float) -> void:
 	z_index = 2
 
 
+## 登場して所定の位置に着いたら true（ステージ側はこれを見てボス戦を始める）。
+func is_ready() -> bool:
+	return mode == Mode.WAIT
+
+
 ## 登場演出が終わったらステージ側が呼ぶ。
 func begin_fight() -> void:
 	mode = Mode.FIGHT

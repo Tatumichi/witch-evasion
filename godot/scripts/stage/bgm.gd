@@ -1,6 +1,6 @@
 extends Node
-## STAGE 1 の BGM。親（stage1.gd）の state を毎フレーム見て、曲を切り替える。
-## stage1.gd 側には手を入れずに済むよう、状態の変化だけを手がかりにしている。
+## ステージの BGM。親（stage_base.gd を継承したステージ）の state を毎フレーム見て、曲を切り替える。
+## ステージ側には手を入れずに済むよう、状態の変化だけを手がかりにしている。
 ##
 ##   TITLE / INTRO / ROAD     … 道中曲「村の空」（タイトルから鳴らし、開始しても頭に戻さない）
 ##   BOSS_INTRO / BOSS        … ボス曲「迷子の風見鶏」（回転モチーフのイントロが登場演出に重なる）
@@ -10,7 +10,7 @@ extends Node
 ## 音源と作曲データ: godot/assets/audio/bgm/*.ogg ← tools/music/*_bgm.py（MIDI 原本は art/music/）
 ## OGG は「イントロ＋ループ本体」で終わるように書き出してあり、TRACKS の loop_offset 秒の位置へ戻ってループする。
 
-const StageScript := preload("res://scripts/stage/stage1.gd")
+const StageScript := preload("res://scripts/stage/stage_base.gd")
 
 const TRACKS := {
 	"road": {"path": "res://assets/audio/bgm/stage1_mura_no_sora.ogg", "loop_offset": 12.0},

@@ -1,6 +1,6 @@
 extends "res://scripts/player.gd"
 ## ステージ用のメルル。帽子ライフの被弾判定、無敵時間、猫の同乗、白猫バリア、煙での減速を持つ。
-## 帽子の数そのものはステージ側（stage1.gd）が管理し、ここは「当たった」ことを知らせるだけ。
+## 帽子の数そのものはステージ側（stage_base.gd）が管理し、ここは「当たった」ことを知らせるだけ。
 
 signal damaged
 signal cat_caught(cat: Area2D)
