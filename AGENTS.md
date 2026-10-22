@@ -14,10 +14,10 @@
 | パス | 内容 |
 |---|---|
 | `godot/` | Godot プロジェクト本体（`godot/project.godot`） |
-| `godot/assets/` | 画像・フォント。生成物はここへ |
+| `godot/assets/` | 画像・フォント・音（`audio/bgm`・`audio/se`）。生成物はここへ |
 | `godot/scripts/` | ゲームロジック。`stage/` にステージ1の実装 |
 | `godot/tests/` | ヘッドレス検証スクリプト |
-| `tools/` | 画像生成・変換の Python（ComfyUI 連携） |
+| `tools/` | 画像生成・変換の Python（ComfyUI 連携）。音は `tools/music/`（BGM）・`tools/sfx/`（SE） |
 | `docs/` | 設計・設定・進捗・決定 |
 | `art/` | 生成の作業場（実験ログは git 管理外） |
 
@@ -64,6 +64,8 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools/comfy.py gen --preset noobai --lora
 - シーン側で子を全消しするコードがある場合、静的ノードはその親の外に置く
 - `z_index` は親からの相対。背景 (-10) < 影 (-1) < キャラ (0) < HUD (CanvasLayer)
 - テストは `SceneTree` を継承した `--script` で書ける（例: `godot/tests/verify_shadow.gd`）
+- 音はヘッドレスでは鳴らさない（`bgm.gd`・`sfx.gd`）。音のテストは `SFX.counts` や `BGM.current_track()` で確かめる
+- SE を足すときは `Sfx.fire(self, "名前")`。直接 AudioStreamPlayer を作らない
 
 ## 参照
 

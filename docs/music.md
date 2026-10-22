@@ -57,3 +57,5 @@ DAW で作り直した音源に差し替える場合も、同じ構成（イン�
 | FAINT | 音量を下げて待つ。やり直しで、道中なら村の空、ボス戦なら迷子の風見鶏を頭から |
 
 検証: `godot --headless --path godot --fixed-fps 60 --script res://tests/verify_bgm.gd`
+
+ヘッドレス実行（検証・CI）では実際の音は出さない。Godot は再生中のまま終了すると「resources still in use」を出すため。曲の選択と音量の変化はそのまま動き、`current_track()` などで確かめられる。

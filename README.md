@@ -224,6 +224,6 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py gen ^
 
 1. Cline に DeepSeek API キーを設定（`docs/setup.md` 参照）
 2. タイトル画面用の立ち絵（`art/witch/witch_chibi_s111.png`）を HUD に組み込む
-3. 効果音をゲームに組み込む（音源は `godot/assets/audio/se/` に用意済み。`docs/sound_effects.md`）
+3. 実機で BGM と SE の音量バランスを聴いて調整する（BGM・SE は実装済み。`docs/music.md`・`docs/sound_effects.md`）
 4. LDtk でステージを作り、`godot/assets/` のスプライトに差し替える
 5. STAGE 1 の仮グラフィックを差し替え、`docs/stage_design.md` に沿って STAGE 2「丘と森の上空」を実装する

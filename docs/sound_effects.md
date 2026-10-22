@@ -1,6 +1,10 @@
 # 効果音（SE）
 
-STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成）で、`godot/assets/audio/se/` にある。ゲームへの組み込み（各イベントで鳴らす処理）はまだ。
+STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成）で、`godot/assets/audio/se/` にある。下の表の全 42 音をゲームに組み込み済み。
+
+- 再生: `godot/scripts/stage/sfx.gd`（`stage1.tscn` の `SFX` ノード）。鳴らす側は `Sfx.fire(self, "hit", {"x": 位置, "pitch_jitter": 0.05})`、ループは `Sfx.loop_on(self, "vane_spin")` / `Sfx.loop_off(...)`（参照カウント）
+- 検証: `godot --headless --path godot --fixed-fps 60 --script res://tests/verify_sfx.gd`（ステージを通して、各イベントで鳴ったかを `SFX.counts` で確かめる）
+- ヘッドレス実行では実際の音は出さない（Godot は再生中のまま終了すると警告を出すため）。鳴らす判断と記録はそのまま動く
 
 - 生成: `python tools/sfx/make_se.py`（リポジトリのルートで。名前を渡すとその音だけ作り直す）。必要: `pip install numpy scipy`
 - 形式: 44.1kHz / 16bit / モノラル WAV。左右の定位はゲーム側（AudioStreamPlayer2D やパン）で付ける
@@ -75,9 +79,12 @@ STAGE 1 の効果音の一覧と、鳴らす場面。音源は第 1 稿（合成
 | `result_line` | リザルトの 1 行 | `show_result` | ぽん（1 行ごと） | B |
 | `new_best` | NEW BEST | 最高スコア更新 | ファンファーレ | B |
 
-## 組み込むときの注意
+## 再生のしくみ（sfx.gd）
 
-- **連発するものは間引く**: キャンディ・鳩・矢印・洗濯物はボス戦で重なる。同じ SE の同時発音は 2〜3 本までにし、`pitch_scale` を少し揺らす
-- **予告音を優先**: `gust_warning` と `pigeon_incoming` はほかの SE より後回しにしない（同時発音の上限で削られないようにする）
-- **ループ音**: `vane_spin` と `storm_loop` は `.wav.import` で `edit/loop_mode=2`（前方ループ）にしてある。止めるときは短いフェードを付ける
+- **連発の間引き**: 同じ音の同時発音数を `MAX_VOICES` で制限（既定 2、キャンディ 2・鳩が逃げる 1 など）。上限に達したら一番古いものを鳴らし直す
+- **優先**: 全体 14 本が埋まったら、`PRIORITY` 以外の一番古い音を止める。`gust_warning`・`pigeon_incoming`・`hit`・`cat_fall` などの予告と手応えは削らない
+- **音程の揺らし**: キャンディ・煙突・洗濯物・鳩などは `pitch_jitter` で毎回少し変える。勇気のかけらは 0.6 秒以内に続けて拾うと半音ずつ上がる（最大 7 段）
+- **定位**: `x`（0〜540）で左右に置く。突風は風上から聞こえる
+- **ループ音**: `vane_spin`（小さな風見鶏が画面にいるあいだ、何羽いても 1 本）と `storm_loop`（STORM のあいだ）。`.wav.import` で `edit/loop_mode=2`。止めるときは 0.3 秒でフェード
+- **音量**: SE 全体は `volume_db = -3`。BGM は −6dB
 - **セリフのボイス**は別枠。「ひゃっ！」「けほっ」などに声を付けるかは別に決める
