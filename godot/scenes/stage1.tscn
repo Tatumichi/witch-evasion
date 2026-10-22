@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/stage/stage1.gd" id="1_stage"]
 [ext_resource type="Script" path="res://scripts/stage/stage1_background.gd" id="2_bg"]
 [ext_resource type="Script" path="res://scripts/stage/stage_player.gd" id="3_player"]
 [ext_resource type="Script" path="res://scripts/stage/stage_hud.gd" id="4_hud"]
 [ext_resource type="Script" path="res://scripts/ground_shadow.gd" id="5_shadow"]
+[ext_resource type="Script" path="res://scripts/stage/bgm.gd" id="6_bgm"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 15.0
@@ -39,3 +40,6 @@ shape = SubResource("CircleShape2D_player")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("4_hud")
+
+[node name="BGM" type="Node" parent="."]
+script = ExtResource("6_bgm")
