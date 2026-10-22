@@ -61,7 +61,7 @@ func _run() -> void:
 	_bgm = _scene.get_node("BGM")
 
 	if not _check(_scene.state == Base.State.TITLE, "タイトル表示"): return
-	if not _check(_bgm.current_key() == "stage1_road", "専用曲が無いあいだは STAGE 1 の道中曲を流す"): return
+	if not _check(_bgm.current_key() == "stage2_road", "STAGE 2 の専用道中曲「丘と森の上空」を流す"): return
 	_scene.start_stage()
 	if not _check(_scene.stage_number() == 2 and is_equal_approx(_scene.scroll, 253.0), "STAGE 2・スクロール 1.1 倍"): return
 	await _wait(2.5)
@@ -137,7 +137,7 @@ func _run() -> void:
 	if not _heard(["storm_loop", "vane_spin"], "（専用音が無いあいだは storm_loop・vane_spin に振り替え）"): return
 	if not _heard(["geese_incoming", "balloon_rise", "tree_rustle", "boss_appear"], "渡り鳥の予告・風船の予告・大木・ボス登場"): return
 	await _wait(0.3)
-	if not _check(_bgm.current_key() == "stage1_boss", "ボス戦は STAGE 1 のボス曲を流す（専用曲ができるまで）"): return
+	if not _check(_bgm.current_key() == "stage2_boss", "ボス戦は専用曲「はぐれ大風車」を流す"): return
 
 	# --- ボス戦
 	if not _check(await _wait_until(func(): return _scene.state == Base.State.BOSS, 6.0), "ボス戦開始"): return

@@ -18,9 +18,8 @@ const StageScript := preload("res://scripts/stage/stage_base.gd")
 const TRACKS := {
 	"stage1_road": {"path": "res://assets/audio/bgm/stage1_mura_no_sora.ogg", "loop_offset": 12.0},
 	"stage1_boss": {"path": "res://assets/audio/bgm/boss1_maigo_no_kazamidori.ogg", "loop_offset": 4.186047},
-	# STAGE 2 の専用曲（未作成。docs/stage2-assets.md）。ファイルを置いたら loop_offset を実際のループ位置に直す
-	"stage2_road": {"path": "res://assets/audio/bgm/stage2_oka_to_mori.ogg", "loop_offset": 0.0},
-	"stage2_boss": {"path": "res://assets/audio/bgm/boss2_hagure_fusha.ogg", "loop_offset": 0.0},
+	"stage2_road": {"path": "res://assets/audio/bgm/stage2_oka_to_mori.ogg", "loop_offset": 10.909091},
+	"stage2_boss": {"path": "res://assets/audio/bgm/boss2_hagure_fusha.ogg", "loop_offset": 4.0},
 }
 
 @export var volume_db := -6.0
