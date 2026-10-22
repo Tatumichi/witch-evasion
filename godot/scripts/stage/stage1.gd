@@ -109,6 +109,11 @@ func _ready() -> void:
 		await get_tree().process_frame
 		start_stage()
 		_enter_boss_intro()
+		for a in args:
+			if a.begins_with("--symbol="):
+				await get_tree().create_timer(0.3).timeout
+				if _boss:
+					_boss.debug_symbol(a.split("=")[1])
 	elif "--start" in args:
 		await get_tree().process_frame
 		start_stage()

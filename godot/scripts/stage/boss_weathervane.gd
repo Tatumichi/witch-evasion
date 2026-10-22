@@ -52,6 +52,7 @@ var _spin := 0.0
 var _spin_speed := 2.4
 var _feed_flash := 0.0
 var _leave_t := 0.0
+var _debug_symbol := ""
 var _force := Vector2.ZERO
 
 
@@ -260,12 +261,55 @@ func _draw() -> void:
 
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+	_draw_state_symbols()
+
 	if has_cat:
 		_draw_hanging_cat(Vector2(18.0, -60.0))
 	if _feed_flash > 0.0:
 		for i in 3:
 			var hp := Vector2(-30.0 + i * 30.0, -100.0 - (0.18 - _feed_flash) * 120.0)
 			_draw_heart(hp, 7.0, Color(1.0, 0.5, 0.65, _feed_flash * 5.0))
+
+
+## 表情は小さくて読みづらいので、状態は記号で示す。
+## 満足=ハート / 怒り=湯気 / 目が回る=渦巻き
+func _draw_state_symbols() -> void:
+	var head := Vector2(38.0, -58.0)
+	var want_happy := satisfaction >= 0.8 and mode != Mode.LEAVE
+	var want_angry := mode == Mode.FIGHT and (_attack == Attack.GUST or _attack == Attack.STORM)
+	var want_dizzy := mode == Mode.LEAVE
+	if _debug_symbol == "happy":
+		want_happy = true
+	elif _debug_symbol == "angry":
+		want_angry = true
+	elif _debug_symbol == "dizzy":
+		want_dizzy = true
+
+	if want_happy:
+		for i in 3:
+			var t := fmod(_t * 0.55 + float(i) / 3.0, 1.0)
+			var p := head + Vector2(sin(t * TAU + float(i)) * 15.0, -32.0 - t * 62.0)
+			_draw_heart(p, 7.5 * (1.0 - t * 0.45), Color(1.0, 0.55, 0.70, 1.0 - t))
+
+	if want_angry:
+		for i in 3:
+			var t := fmod(_t * 1.7 + float(i) / 3.0, 1.0)
+			var p := head + Vector2(-28.0 + float(i) * 10.0 + t * 7.0, -26.0 - t * 46.0)
+			draw_circle(p, 5.5 + t * 5.0, Color(1.0, 1.0, 1.0, 0.55 * (1.0 - t)))
+
+	if want_dizzy:
+		var c := head + Vector2(0.0, -32.0)
+		var pts := PackedVector2Array()
+		for i in 44:
+			var a := float(i) / 43.0 * TAU * 2.1
+			var r := 1.5 + a * 2.3
+			pts.append(c + Vector2(cos(a), sin(a)) * r)
+		draw_polyline(pts, Color(0.34, 0.18, 0.44, 0.9), 2.5, true)
+
+
+## 動作確認用: 記号の描画だけを強制する（--symbol から呼ぶ）。
+func debug_symbol(m: String) -> void:
+	_debug_symbol = m
 
 
 func _draw_hanging_cat(p: Vector2) -> void:

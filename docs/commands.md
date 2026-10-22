@@ -17,6 +17,9 @@ $GD --headless --path godot --script res://tests/verify_ui.gd
 $GD --headless --path godot --script res://tests/verify_stage1.gd
 $GD --headless --path godot --script res://tests/verify_shadow.gd
 
+# ボス確認（演出を飛ばして進入。--symbol は記号描画の強制）
+$GD --path godot --write-movie "$LOCALAPPDATA/Temp/boss/frame.png" --fixed-fps 30 --quit-after 80 -- --boss --symbol=happy
+
 # 画面キャプチャ（日本語パス不可 → Temp に出す）
 $GD --path godot --write-movie "$LOCALAPPDATA/Temp/out/frame.png" --fixed-fps 30 --quit-after 90 -- --start
 ```
