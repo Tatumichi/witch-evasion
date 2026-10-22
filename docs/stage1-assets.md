@@ -9,7 +9,7 @@ STAGE 1「村の空」で使われているイラスト・UI・素材の棚卸�
 
 | 種別 | 点数 | 状態 |
 | --- | --- | --- |
-| 画像素材 | **6点** | キャラ2点＋背景2点は生成済み、UI2点はコード生成 |
+| 画像素材 | **10点** | キャラ2点＋背景2点＋ボス差分4点は生成済み、UI2点はコード生成 |
 | フォント | 1点 | M PLUS Rounded 1c Bold（OFL） |
 | コード描画 | 10スクリプト | 背景・障害物・ピックアップ・ボス・UI部品はすべて**プレースホルダー** |
 | 音声 | **0点** | 未実装 |
@@ -28,6 +28,10 @@ STAGE 1「村の空」で使われているイラスト・UI・素材の棚卸�
 | `godot/assets/ui/title_witch.png` | 420×500 RGBA | タイトル／ステージカードの立ち絵 | 同上（Meluru立ち絵から合成） |
 | `godot/assets/background/village_band.png` | 1200×320 RGBA | 村の帯（下端に敷いて流す） | 家を3枚生成し `tools/build_village_band.py` で合成 |
 | `godot/assets/background/tower.png` | 507×987 RGBA | 教会の塔（パララックス0.45） | 生成した教会を切り抜き |
+| `godot/assets/characters/boss/vane_normal.png` | 512×512 RGBA | ボス・通常 | 生成＋`trim_sprite.py` |
+| `vane_happy.png` | 512×512 RGBA | ボス・満足（照れ） | 基準絵から img2img（denoise 0.6） |
+| `vane_angry.png` | 512×512 RGBA | ボス・怒り／風を吹く | 同上 |
+| `vane_dizzy.png` | 512×512 RGBA | ボス・目が回る／退場 | 同上 |
 
 未使用の生成素材: `art/meluru/final_rich/meluru_face.png`（会話用ポートレート）、`meluru_34.png`（斜め立ち）。会話UIに使える。
 
