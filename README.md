@@ -22,6 +22,8 @@ DeepSeek を AI 相棒にして Godot 4 でゲームを作るための環境で�
 ```
 godot/
 ├── project.godot          540x960・入力マップ・物理レイヤー
+├── icon.png               256px アイコン（ドット絵調）
+├── icon.ico               exe 用アイコン（16〜256）
 ├── scenes/main.tscn       Background / World / Player / HUD
 ├── assets/
 │   ├── characters/witch/
@@ -65,6 +67,20 @@ godot --path godot -- --start
 タイトル画面の確認（PNG 連番で書き出し）:
 ```bash
 godot --path godot --write-movie out/frame.png --fixed-fps 30 --quit-after 45
+```
+
+### 配布用ビルド（exe）
+
+アイコンはドット絵調の魔女。`godot/icon.png`（256px・ウィンドウ / エディタ用）と
+`godot/icon.ico`（16〜256 のマルチサイズ・exe 用）を、`tools/make_icon.py` で生成している。
+
+初回だけエクスポートテンプレートの導入が必要:
+1. Godot 4.7.2 のエクスポートテンプレート（`.tpz`）を取得
+2. `%APPDATA%\Godot\export_templates\4.7.2.stable\` に中身を展開
+
+```bash
+# ビルド（build/ は git 管理外）
+godot --headless --export-release "Windows Desktop" build/WitchEvasion.exe
 ```
 
 被弾フレームの確認（1 回被弾させて停止）:

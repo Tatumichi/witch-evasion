@@ -21,3 +21,7 @@ Desktop.ini
 #   git lfs track "*.png" "*.wav" "*.ogg" "*.glb" "*.blend"
 *.psd
 *.blend1
+
+# ---- Build output ----
+build/
+*.exe
