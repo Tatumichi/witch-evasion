@@ -140,6 +140,73 @@ py -3.12 -m venv C:/AI/ComfyUI/.venv
 
 pixel art は SDXL + `pixel-art-xl` LoRA、または SD1.5 + ドット絵 LoRA が扱いやすい。
 
+### 導入済みモデル（2026-10-22 追加）
+
+| モデル | サイズ | 状態 |
+|---|---|---|
+| `animagine-xl-4.0.safetensors` | 6.46 GiB | ✅ 導入済み（アニメ調 SDXL・品質タグ `masterpiece, high score, great score, absurdres` 推奨） |
+
+### API 連携（`tools/comfy.py`）
+
+ComfyUI を起動したまま、標準ライブラリだけで動くクライアントから生成できる。
+
+```bash
+# 状態・VRAM 確認
+C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py status
+
+# 導入済みモデル一覧
+C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py models
+
+# 生成（--seed 0 または省略でランダム）
+C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py gen ^
+  --prompt "masterpiece, 1girl, witch, full body, simple background" ^
+  --width 832 --height 1216 --steps 28 --cfg 6 ^
+  --out godot/assets/characters/witch
+```
+
+| 実測 | 値 |
+|---|---|
+| 832x1216 / 28 steps / dpmpp_2m karras | 約 22 秒（モデルロード込み） |
+| 出力 | PNG + 同名 `.json`（投入したワークフローと seed を丸ごと保存） |
+
+seed を固定すれば同じ絵を再現できるため、差分は git で追える。
+
+### スプライト化（`tools/prepare_sprite.py`）
+
+生成した白背景レンダーを、ゲームでそのまま使える透過 PNG に変換する。
+
+```bash
+C:\AI\ComfyUI\.venv\Scripts\python.exe tools/prepare_sprite.py ^
+  art/witch/witch_fly2_s1212.png ^
+  -o godot/assets/characters/witch/witch_sprite.png ^
+  --fit 190x150 --canvas 240x190 --origin 135,125 --center=-16,-32
+```
+
+| 処理 | 内容 |
+|---|---|
+| 背景透過 | 四辺からフラッドフィル（`--thresh` 40）→ 内部の白は残す |
+| 白フチ除去 | 2px 収縮 + ぼかし |
+| サイズ | `--fit` がゲーム内の最大表示サイズ（190x150） |
+| 原点 | `--origin` がゲーム座標 (0,0) にあたる画素。`player.gd` 側は `position = -SPRITE_ORIGIN` |
+| 注意 | `--center` は負値なので `--center=-16,-32` と `=` で渡す |
+
+ゲーム側はテクスチャを等倍で置くだけなので、実行時の拡縮は発生しない。
+生成前のレンダーと投入ワークフローは `art/witch/` に残している。
+
+#### 表情差分（img2img）
+
+構図とデザインを保ったまま表情だけ変えたいときは `img2img` を使う（`--denoise` 0.4=ほぼ維持 / 0.7=大きく変更）。
+
+```bash
+C:\AI\ComfyUI\.venv\Scripts\python.exe tools/comfy.py img2img ^
+  --input art/witch/witch_fly2_s1212.png ^
+  --denoise 0.7 --seed 1212 --name witch_hit_img2img_d07 --out art/witch ^
+  --prompt "chibi, 1girl, witch, surprised face, wide open mouth, sweatdrops, arms flailing, ..."
+```
+
+同じ `--fit / --canvas / --origin` で `prepare_sprite.py` に通せば、通常スプライトと原点・縮尺が揃う。
+被弾差分はこれで作り、`player.gd` が `die()` で `witch_hit.png` に切り替える。
+
 > **注意**: 生成した絵をそのままゲームに使う場合、モデルのライセンス（商用可否）を必ず確認。
 
 ---
@@ -187,10 +254,11 @@ pixel art は SDXL + `pixel-art-xl` LoRA、または SD1.5 + ドット絵 LoRA �
 | Python 3.12 | `py -3.12 --version` | `3.12.10` ✅ |
 | torch + CUDA | `torch.cuda.is_available()` | `True` / RTX 3060 12.9GB ✅ |
 | ComfyUI 起動 | `/system_stats` | `0.42.0` / `cuda:0` 認識 ✅ |
+| ComfyUI 生成 | `tools/comfy.py gen` | 832x1216 / 28 steps / 約22秒 ✅ |
 | git | `git log` | 初回コミット済み ✅ |
 
-**未実施（意図的）**: Godot のエクスポートテンプレート、ComfyUI のモデル（数 GB）は
-初回利用時に取得してください。
+**未実施（意図的）**: Godot のエクスポートテンプレートは初回エクスポート時に取得。
+ComfyUI のモデルは `animagine-xl-4.0`（6.46 GiB）を導入済み。
 
 ---
 

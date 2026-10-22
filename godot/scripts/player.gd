@@ -9,6 +9,12 @@ const GAME_H := 960.0
 const BASE_Y := 710.0
 const DRAW_SCALE := 0.95
 
+## 生成した魔女スプライト。無ければ下のコード描画にフォールバックする。
+const SPRITE_PATH := "res://assets/characters/witch/witch_sprite.png"
+const HIT_SPRITE_PATH := "res://assets/characters/witch/witch_hit.png"
+const SPRITE_ORIGIN := Vector2(135.0, 125.0)   # 画像内でゲーム座標(0,0)にあたる画素
+const TRAIL_ANCHOR := Vector2(-70.0, -28.0)    # ほうきの穂先（後方）
+
 const SKIN := Color(1.0, 0.88, 0.79)
 const BLUSH := Color(1.0, 0.55, 0.65)
 const HAIR := Color(0.96, 0.56, 0.79)
@@ -30,6 +36,9 @@ var alive := true
 var _t := 0.0
 var _tilt := -0.24
 var _trail: Line2D
+var _sprite: Sprite2D
+var _tex_idle: Texture2D
+var _tex_hit: Texture2D
 var _history: Array[Vector2] = []
 
 
@@ -37,7 +46,27 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 6
 	area_entered.connect(_on_area_entered)
+	_build_sprite()
 	_build_trail()
+
+
+## スプライトがあれば親の原点に合わせて配置する。画像はゲーム解像度で焼き込み済みなので拡縮不要。
+func _build_sprite() -> void:
+	if not ResourceLoader.exists(SPRITE_PATH):
+		return
+	var texture := load(SPRITE_PATH) as Texture2D
+	if texture == null:
+		return
+	_tex_idle = texture
+	if ResourceLoader.exists(HIT_SPRITE_PATH):
+		_tex_hit = load(HIT_SPRITE_PATH) as Texture2D
+	_sprite = Sprite2D.new()
+	_sprite.name = "WitchSprite"
+	_sprite.texture = texture
+	_sprite.centered = false
+	_sprite.position = -SPRITE_ORIGIN
+	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	add_child(_sprite)
 
 
 func _build_trail() -> void:
@@ -71,9 +100,12 @@ func spawn_at(pos: Vector2) -> void:
 	alive = true
 	active = false
 	modulate = Color.WHITE
+	scale = Vector2.ONE
 	_tilt = -0.24
 	rotation = _tilt
 	_history.clear()
+	if _sprite and _tex_idle:
+		_sprite.texture = _tex_idle
 	if _trail:
 		_trail.points = PackedVector2Array()
 		_trail.visible = true
@@ -87,6 +119,14 @@ func die() -> void:
 	set_deferred("monitoring", false)
 	if _trail:
 		_trail.visible = false
+	if _sprite and _tex_hit:
+		_sprite.texture = _tex_hit
+
+	# 被弾の「めり込み」を一瞬だけ見せる。
+	var punch := create_tween()
+	punch.tween_property(self, "scale", Vector2(1.08, 0.92), 0.05)
+	punch.tween_property(self, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 	var tw := create_tween()
 	tw.tween_property(self, "modulate", Color(1.0, 0.45, 0.55, 1.0), 0.06)
 	tw.tween_property(self, "modulate", Color(1.0, 0.9, 0.95, 0.45), 0.35)
@@ -104,6 +144,9 @@ func _process(delta: float) -> void:
 
 		if not active:
 			position.y = BASE_Y + sin(_t * 1.6) * 6.0
+
+	if _sprite:
+		_sprite.position = -SPRITE_ORIGIN + Vector2(0.0, sin(_t * 3.1) * 2.0)
 
 	_update_trail()
 	queue_redraw()
@@ -132,7 +175,8 @@ func _update_trail() -> void:
 			_trail.points = PackedVector2Array()
 		return
 
-	var head := global_position + Vector2(-46.0, 16.0).rotated(rotation)
+	var anchor := TRAIL_ANCHOR if _sprite else Vector2(-46.0, 16.0)
+	var head := global_position + anchor.rotated(rotation)
 	_history.push_front(head)
 	while _history.size() > 18:
 		_history.pop_back()
@@ -154,7 +198,8 @@ func _on_area_entered(area: Area2D) -> void:
 func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(DRAW_SCALE, DRAW_SCALE))
 	_draw_glow()
-	_draw_body()
+	if _sprite == null:
+		_draw_body()
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 

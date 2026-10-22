@@ -8,6 +8,7 @@ export_presets.cfg.bak
 # ---- AI / tooling ----
 .vscode/settings.json.bak
 .continue/
+__pycache__/
 *.log
 
 # ---- OS ----

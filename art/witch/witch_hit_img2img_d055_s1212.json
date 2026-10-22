@@ -1,0 +1,101 @@
+{
+  "prompt_id": "eb12643c-5e81-4468-bac0-2ab3123fbe9d",
+  "seed": 1212,
+  "workflow": {
+    "0": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "animagine-xl-4.0.safetensors"
+      }
+    },
+    "1": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "witch_fly2_s1212.png"
+      }
+    },
+    "2": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "masterpiece, high score, great score, absurdres, chibi, super deformed, 3 heads tall, cute, 1girl, solo, witch, black witch hat, long straight purple hair, big purple eyes, black and purple dress, flying, side view, facing right, surprised face, wide open mouth, sweatdrops, arms flailing, losing balance, wobbly, broom bristles behind on the left, full body, simple background, white background, anime style, clean lineart, thick outlines",
+        "clip": [
+          "0",
+          1
+        ]
+      }
+    },
+    "3": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "lowres, bad anatomy, bad hands, text, error, extra digits, cropped, worst quality, low quality, signature, watermark, username, blurry, mature, realistic proportions, multiple views, collage, gore, blood, injury, standing, sad, crying",
+        "clip": [
+          "0",
+          1
+        ]
+      }
+    },
+    "4": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": [
+          "1",
+          0
+        ],
+        "vae": [
+          "0",
+          2
+        ]
+      }
+    },
+    "5": {
+      "class_type": "KSampler",
+      "inputs": {
+        "model": [
+          "0",
+          0
+        ],
+        "positive": [
+          "2",
+          0
+        ],
+        "negative": [
+          "3",
+          0
+        ],
+        "latent_image": [
+          "4",
+          0
+        ],
+        "seed": 1212,
+        "steps": 28,
+        "cfg": 6.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 0.55
+      }
+    },
+    "6": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "5",
+          0
+        ],
+        "vae": [
+          "0",
+          2
+        ]
+      }
+    },
+    "7": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "images": [
+          "6",
+          0
+        ],
+        "filename_prefix": "dsh/witch"
+      }
+    }
+  }
+}
