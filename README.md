@@ -29,6 +29,7 @@ DeepSeek を AI 相棒にして Godot 4 でゲームを作るための環境で�
 | [`docs/witch_merulu_setting.md`](docs/witch_merulu_setting.md) | コンセプト、主人公メルル、暴走の原因と神域、導入シーン台本 |
 | [`docs/stage_design.md`](docs/stage_design.md) | 全5ステージの設定書。共通仕様、障害物、落っこち猫、ボス、セリフ、エンディング |
 | [`docs/music.md`](docs/music.md) | BGM。曲の狙い、ループ位置、書き出し方、再生の切り替え |
+| [`docs/sound_effects.md`](docs/sound_effects.md) | 効果音 42 音の一覧、鳴らす場面、優先度、組み込みの注意 |
 
 設定書で決めている主な仕様（STAGE 1 は実装済み、STAGE 2〜5 は未実装）:
 
@@ -223,6 +224,6 @@ C:\AI\ComfyUI\.venv\Scripts\python.exe tools\comfy.py gen ^
 
 1. Cline に DeepSeek API キーを設定（`docs/setup.md` 参照）
 2. タイトル画面用の立ち絵（`art/witch/witch_chibi_s111.png`）を HUD に組み込む
-3. 効果音を追加（BGM は STAGE 1 の道中・ボス戦を実装済み。`docs/music.md`）
+3. 効果音をゲームに組み込む（音源は `godot/assets/audio/se/` に用意済み。`docs/sound_effects.md`）
 4. LDtk でステージを作り、`godot/assets/` のスプライトに差し替える
 5. STAGE 1 の仮グラフィックを差し替え、`docs/stage_design.md` に沿って STAGE 2「丘と森の上空」を実装する
