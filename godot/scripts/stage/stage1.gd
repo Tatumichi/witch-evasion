@@ -19,6 +19,7 @@ const CandyScript := preload("res://scripts/stage/candy.gd")
 const BossScript := preload("res://scripts/stage/boss_weathervane.gd")
 const FxScript := preload("res://scripts/stage/fx.gd")
 const RingScript := preload("res://scripts/ring.gd")
+const Sfx := preload("res://scripts/stage/sfx.gd")
 
 const GAME_W := 540.0
 const GAME_H := 960.0
@@ -91,6 +92,8 @@ var _road_cats_missed := 0
 var _said := {}
 var _cooldowns := {}
 var _clear_step := 0
+var _courage_chain := 0
+var _courage_last_ms := -10000
 
 
 func _ready() -> void:
@@ -186,6 +189,7 @@ func _enter_boss_intro() -> void:
 	_boss.gust_changed.connect(func(f: Vector2): player.push = f)
 	_boss.satisfied.connect(_on_boss_satisfied)
 	_boss.left_screen.connect(func(): _boss = null)
+	Sfx.fire(self, "boss_appear")
 	_road_cats_saved = cats_saved
 	_road_cats_missed = cats_missed
 	hud.say("メルル", "風見鶏さん、うしろに猫ちゃんが！　ちょっとだけじっとしてて〜！", 3.4)
@@ -195,6 +199,7 @@ func _begin_boss() -> void:
 	_set_state(State.BOSS)
 	_boss.begin_fight()
 	hud.show_boss_gauge(true)
+	Sfx.fire(self, "gauge_show", {"delay": 0.15})
 	hud.set_boss_gauge(0.0)
 
 
@@ -206,6 +211,8 @@ func _on_boss_satisfied() -> void:
 	player.push = Vector2.ZERO
 	hud.show_boss_gauge(false)
 	hud.say("大風見鶏", "……コケッ。", 2.0)
+	Sfx.fire(self, "boss_satisfied")
+	Sfx.fire(self, "boss_koke", {"delay": 0.7})
 	# 残っている矢印や洗濯物はそっと消す
 	for c in world.get_children():
 		if c != player and c != _boss and c.has_method("break_apart"):
@@ -219,12 +226,14 @@ func _faint() -> void:
 	player.faint()
 	_end_cat_effect()
 	_shake = 18.0
+	Sfx.fire(self, "faint")
 	hud.say("メルル", "ふにゃ〜……め、目がまわる〜……", 2.6)
 	hud.show_faint(true)
 
 
 func _restart_after_faint() -> void:
 	hud.show_faint(false)
+	Sfx.fire(self, "restart")
 	if not _faint_in_boss:
 		start_stage()
 		return
@@ -252,6 +261,10 @@ func _show_result() -> void:
 		best = score
 		_save_best()
 	hud.set_score(score)
+	for i in 5:
+		Sfx.fire(self, "result_line", {"delay": 0.12 * i, "pitch": pow(2.0, [0, 2, 4, 5, 7][i] / 12.0)})
+	if is_best:
+		Sfx.fire(self, "new_best", {"delay": 0.75})
 	hud.show_result([
 		"スコア　%d%s" % [score, "　NEW BEST!" if is_best else ""],
 		"救った猫　%d / %d" % [cats_saved, CATS_TOTAL],
@@ -347,6 +360,7 @@ func _update_clear() -> void:
 	if _clear_step == 0 and _state_t >= 2.6:
 		_clear_step = 1
 		hud.god_say("……ん？　今、下で何か光らなかったか？", 3.0)
+		Sfx.fire(self, "god_voice")
 	elif _clear_step == 1 and _state_t >= 5.2:
 		_clear_step = 2
 		player.active = false
@@ -471,6 +485,7 @@ func _spawn_pigeon_row() -> void:
 		world.add_child(p)
 	_last_row_t = road_t
 	_hold_until = road_t + 1.4
+	Sfx.fire(self, "pigeon_incoming")
 	_count("pigeons")
 
 
@@ -486,6 +501,7 @@ func _spawn_smoke(x: float) -> void:
 	s.setup(x, SCROLL, _rng)
 	world.add_child(s)
 	_count("smoke")
+	Sfx.fire(self, "chimney_puff", {"x": x, "pitch_jitter": 0.06})
 
 
 func _spawn_courage_pattern() -> void:
@@ -519,6 +535,7 @@ func _spawn_cat(fur: int, pos: Vector2, source: String, from_top: bool) -> void:
 	c.missed.connect(_on_cat_missed)
 	world.add_child(c)
 	_count("cat")
+	Sfx.fire(self, "cat_fall", {"x": pos.x, "pitch_jitter": 0.04})
 
 
 func _spawn_ring(pos: Vector2, c: Color, to_radius: float, dur: float) -> void:
@@ -531,6 +548,8 @@ func _pop_text(pos: Vector2, text: String, c: Color) -> void:
 	var f = FxScript.new()
 	f.setup_pop(pos, text, c)
 	world.add_child(f)
+	if text.begins_with("+"):
+		Sfx.fire(self, "pop_score", {"x": pos.x})
 
 
 # ================================================================ メルルまわり
@@ -551,6 +570,9 @@ func _on_damaged() -> void:
 	if hats <= 0:
 		_faint()
 		return
+	Sfx.fire(self, "hit", {"x": player.global_position.x})
+	if hats == 1:
+		Sfx.fire(self, "hat_warning", {"delay": 0.18})
 	player.start_invincible(INVINCIBLE_TIME)
 	hud.say("メルル", "ひゃっ！" if _rng.randf() < 0.5 else "ご、ごめんなさい〜！", 1.4)
 
@@ -559,11 +581,17 @@ func _on_courage(shard: Area2D) -> void:
 	shard.queue_free()
 	courage += 1
 	_score_f += 10
+	var now := Time.get_ticks_msec()
+	_courage_chain = mini(_courage_chain + 1, 7) if now - _courage_last_ms < 600 else 0
+	_courage_last_ms = now
+	Sfx.fire(self, "courage", {"pitch": pow(2.0, _courage_chain / 12.0), "x": player.global_position.x})
 	if courage % COURAGE_PER_HAT == 0:
 		if hats < MAX_HATS:
+			Sfx.fire(self, "hat_restore")
 			hats += 1
 			_pop_text(player.global_position + Vector2(0.0, -80.0), "帽子がもどった！", Color(0.70, 1.0, 0.86))
 		else:
+			Sfx.fire(self, "bonus")
 			_score_f += 500
 			_pop_text(player.global_position + Vector2(0.0, -80.0), "+500", Color(1.0, 0.92, 0.6))
 	elif courage % 10 == 0 and _cooldown_ok("courage_line", 12.0):
@@ -573,12 +601,14 @@ func _on_courage(shard: Area2D) -> void:
 
 func _on_smoke(inside: bool) -> void:
 	player.speed_mul = 0.55 if inside else 1.0
+	Sfx.fire(self, "smoke_in" if inside else "smoke_out", {"x": player.global_position.x})
 	if inside and _cooldown_ok("cough", 6.0):
 		hud.say("メルル", "けほっ、けほっ……前が見えない〜", 1.6)
 
 
 func _on_tower_passed() -> void:
 	if state == State.ROAD:
+		Sfx.fire(self, "church_bell")
 		_say_once("tower", "メルル", "塔より、高い……いやいやいや、下見ない。下見ない。", 3.2)
 
 
@@ -590,6 +620,7 @@ func _on_cat_caught(cat: Area2D) -> void:
 	cat.queue_free()
 	cats_saved += 1
 	_score_f += 100
+	Sfx.fire(self, "cat_catch", {"x": player.global_position.x})
 	_spawn_ring(player.global_position, Color(1.0, 0.85, 0.55), 70.0, 0.4)
 	_pop_text(player.global_position + Vector2(0.0, -86.0), "+100", Color(1.0, 0.92, 0.6))
 	_start_cat_effect(fur)
@@ -604,6 +635,7 @@ func _on_cat_missed(_cat: Area2D) -> void:
 	if not state in [State.ROAD, State.BOSS, State.BOSS_INTRO, State.CLEAR]:
 		return
 	cats_missed += 1
+	Sfx.fire(self, "cat_miss")
 	hud.say("メルル", "あっ……ああっ！", 1.6)
 	_refresh_hud()
 
@@ -618,6 +650,8 @@ func _start_cat_effect(fur: int) -> void:
 	_candy_cd = 0.6
 	player.add_rider(fur)
 	player.barrier = fur == 1
+	if fur == 1:
+		Sfx.fire(self, "barrier_on", {"delay": 0.25})
 
 
 func _end_cat_effect() -> void:
@@ -630,11 +664,16 @@ func _end_cat_effect() -> void:
 func _update_cat_effect(delta: float) -> void:
 	if cat_effect < 0:
 		return
+	var before := cat_effect_t
 	cat_effect_t -= delta
 	hud.set_cat_effect(cat_effect, cat_effect_t / CAT_EFFECT_TIME)
 	if cat_effect_t <= 0.0:
 		_end_cat_effect()
+		Sfx.fire(self, "cat_effect_end")
 		return
+	# 残り 2 秒から 0.5 秒ごとに「かちっ」
+	if cat_effect_t < 2.0 and floori(before / 0.5) != floori(cat_effect_t / 0.5):
+		Sfx.fire(self, "cat_effect_warn")
 	if cat_effect == 0 and player.alive:
 		_candy_cd -= delta
 		if _candy_cd <= 0.0:
@@ -651,14 +690,18 @@ func _fire_candy() -> void:
 	var spread: float = [0.0, 0.04, 0.0, -0.04][_candy_n % 4]
 	c.setup(origin, Vector2(0.0, -720.0).rotated(spread), _candy_n)
 	c.broke.connect(_on_candy_broke)
-	c.fed.connect(func(_b): _score_f += 5)
+	c.fed.connect(func(_b):
+		_score_f += 5
+		Sfx.fire(self, "candy_eat", {"pitch_jitter": 0.04}))
 	world.add_child(c)
+	Sfx.fire(self, "candy_fire", {"pitch_jitter": 0.05, "x": origin.x})
 	_candy_n += 1
 	_count("candy")
 
 
 func _on_candy_broke(target: Area2D) -> void:
 	_score_f += 20
+	Sfx.fire(self, "candy_hit", {"x": target.global_position.x, "pitch_jitter": 0.05})
 	if _cooldown_ok("sorry", 3.0):
 		_pop_text(target.global_position + Vector2(0.0, -30.0), "ごめんね", Color(1.0, 0.86, 0.94))
 
@@ -696,6 +739,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match state:
 		State.TITLE:
+			Sfx.fire(self, "ui_start")
 			start_stage()
 		State.FAINT:
 			if _state_t >= 0.8:

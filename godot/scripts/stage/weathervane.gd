@@ -2,6 +2,8 @@ extends Area2D
 ## 屋根から外れて落ちてくる小さな風見鶏（仮グラフィック）。くるくる回りながら速めに落ちる。
 ## 画面上に入る前は、上端に「！」の予告を出す。キャンディで壊せる。
 
+const Sfx := preload("res://scripts/stage/sfx.gd")
+
 const IRON := Color(0.24, 0.20, 0.30)
 const GOLD := Color(0.95, 0.76, 0.36)
 const WARN := Color(1.0, 0.5, 0.42)
@@ -25,6 +27,15 @@ func setup(start: Vector2, velocity_px: Vector2, rng: RandomNumberGenerator) -> 
 	var cs := CollisionShape2D.new()
 	cs.shape = s
 	add_child(cs)
+
+
+## 画面にいるあいだ「きぃきぃ」を鳴らす（何羽いても 1 本）。
+func _enter_tree() -> void:
+	Sfx.loop_on(self, "vane_spin")
+
+
+func _exit_tree() -> void:
+	Sfx.loop_off(self, "vane_spin")
 
 
 func break_apart() -> void:

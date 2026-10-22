@@ -10,6 +10,7 @@ extends CanvasLayer
 const FONT_PATH := "res://assets/fonts/MPLUSRounded1c-Bold.ttf"
 const LOGO_PATH := "res://assets/ui/logo.png"
 const CARD_PATH := "res://assets/ui/title_witch.png"
+const Sfx := preload("res://scripts/stage/sfx.gd")
 
 const TEXT := Color(1.0, 0.98, 0.96)
 const OUTLINE := Color(0.14, 0.07, 0.18, 0.92)
@@ -366,6 +367,7 @@ func show_stage_card(title: String, sub: String, seconds := 2.2) -> void:
 	_card_sub.text = sub
 	_card.visible = true
 	_card.modulate.a = 0.0
+	Sfx.fire(self, "stage_card")
 	var tw := create_tween()
 	tw.tween_property(_card, "modulate:a", 1.0, 0.3)
 	tw.tween_interval(maxf(seconds - 0.6, 0.1))
@@ -421,12 +423,15 @@ func say(speaker: String, text: String, seconds := 2.6) -> void:
 	_say_text.text = text
 	_say_box.visible = true
 	_say_left = seconds
+	if speaker == "メルル":
+		Sfx.fire(self, "talk_meruru", {"pitch_jitter": 0.04})
 
 
 func god_say(text: String, seconds := 3.0) -> void:
 	_god_text.text = "神々「%s」" % text
 	_god_box.visible = true
 	_god_left = seconds
+	Sfx.fire(self, "talk_god")
 
 
 func clear_talk() -> void:

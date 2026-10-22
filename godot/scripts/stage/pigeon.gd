@@ -2,6 +2,8 @@ extends Area2D
 ## 鳩（仮グラフィック）。ステージ側が 8 マスに 7 羽並べ、1 マス分のすき間を空けて降らせる。
 ## キャンディが当たると驚いて飛び去る（壊れるのではなく逃げる）。
 
+const Sfx := preload("res://scripts/stage/sfx.gd")
+
 const BODY := Color(0.72, 0.72, 0.82)
 const WING := Color(0.56, 0.56, 0.68)
 const NECK := Color(0.52, 0.74, 0.70)
@@ -36,6 +38,7 @@ func break_apart() -> void:
 	if _fleeing:
 		return
 	_fleeing = true
+	Sfx.fire(self, "pigeon_scatter", {"x": global_position.x, "pitch_jitter": 0.06})
 	remove_from_group("obstacles")
 	remove_from_group("breakable")
 	set_deferred("monitorable", false)

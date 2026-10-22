@@ -16,6 +16,7 @@ signal left_screen
 const LaundryScript := preload("res://scripts/stage/laundry.gd")
 const ArrowScript := preload("res://scripts/stage/wind_arrow.gd")
 const FONT := preload("res://assets/fonts/MPLUSRounded1c-Bold.ttf")
+const Sfx := preload("res://scripts/stage/sfx.gd")
 
 ## 何もしなくても 50 秒で満タン。キャンディ 1 発で 0.014 増える（設定書: 最短 25 秒程度）。
 const NATURAL_RATE := 1.0 / 50.0
@@ -54,6 +55,7 @@ var _feed_flash := 0.0
 var _leave_t := 0.0
 var _debug_symbol := ""
 var _force := Vector2.ZERO
+var _storm_sound := false
 
 
 func setup(world: Node2D, rng: RandomNumberGenerator, scroll: float) -> void:
@@ -78,6 +80,7 @@ func begin_fight() -> void:
 	mode = Mode.FIGHT
 	_fight_t = 0.0
 	_start_attack(Attack.ARROWS)
+	Sfx.fire(self, "boss_crow")
 
 
 func feed() -> void:
@@ -94,6 +97,9 @@ func debug_fill(amount: float) -> void:
 
 func _set_force(f: Vector2) -> void:
 	if f != _force:
+		# 突風が吹き始めた瞬間。風上（押される向きの反対側）から聞こえるようにする
+		if _attack == Attack.GUST and f.x != 0.0 and _force == Vector2.ZERO:
+			Sfx.fire(self, "gust", {"x": 270.0 - signf(f.x) * 230.0})
 		_force = f
 		gust_changed.emit(f)
 
@@ -101,12 +107,14 @@ func _set_force(f: Vector2) -> void:
 func _start_attack(a: int) -> void:
 	_attack = a
 	_attack_t = 0.0
+	_set_storm_sound(a == Attack.STORM)
 	match a:
 		Attack.ARROWS:
 			_volley_cd = 0.6
 			_set_force(Vector2.ZERO)
 		Attack.GUST:
 			_gust_dir = 1.0 if _rng.randf() < 0.5 else -1.0
+			Sfx.fire(self, "gust_warning")
 		Attack.STORM:
 			_laundry_cd = 0.0
 
@@ -175,6 +183,8 @@ func _fight(delta: float) -> void:
 		mode = Mode.LEAVE
 		_leave_t = 0.0
 		_set_force(Vector2.ZERO)
+		_set_storm_sound(false)
+		Sfx.fire(self, "boss_leave", {"delay": 1.4})
 		remove_from_group("obstacles")
 		set_deferred("monitorable", false)
 		satisfied.emit()
@@ -192,8 +202,23 @@ func _leave(delta: float) -> void:
 			queue_free()
 
 
+func _set_storm_sound(on: bool) -> void:
+	if on == _storm_sound:
+		return
+	_storm_sound = on
+	if on:
+		Sfx.loop_on(self, "storm_loop")
+	else:
+		Sfx.loop_off(self, "storm_loop")
+
+
+func _exit_tree() -> void:
+	_set_storm_sound(false)
+
+
 func _fire_volley(speed: float) -> void:
 	var origin := global_position + Vector2(0.0, 40.0)
+	Sfx.fire(self, "arrow_volley", {"x": origin.x, "pitch_jitter": 0.04})
 	for deg in [-25.0, 0.0, 25.0]:
 		var dir := Vector2.DOWN.rotated(deg_to_rad(deg))
 		var a = ArrowScript.new()

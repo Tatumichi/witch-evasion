@@ -3,6 +3,8 @@ extends Area2D
 ## SHEET: 大きくてゆっくり。キャンディでは壊れない。
 ## SOCK : 小さくてくるくる回る。キャンディで壊せる。
 
+const Sfx := preload("res://scripts/stage/sfx.gd")
+
 enum Kind { SHEET, SOCK }
 
 const SHEET_COL := Color(0.97, 0.97, 1.0)
@@ -51,6 +53,7 @@ func break_apart() -> void:
 	set_deferred("monitorable", false)
 	vel = Vector2(vel.x * 0.3, -120.0)
 	_spin *= 4.0
+	Sfx.fire(self, "laundry_pop", {"x": global_position.x, "pitch_jitter": 0.08})
 	var tw := create_tween()
 	tw.tween_property(self, "modulate:a", 0.0, 0.35)
 	tw.tween_callback(queue_free)
