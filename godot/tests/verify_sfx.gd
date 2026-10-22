@@ -179,8 +179,8 @@ func _run() -> void:
 	_heard(["result_line", "new_best"], "リザルトの行と NEW BEST")
 
 	# --- STAGE 1 用の音はすべて、どこかで鳴る（STAGE 2 の音は sfx.gd の FALLBACK に名前がある。
-	#     STAGE 2 の音は verify_stage2.gd で確かめる）
-	var not_stage1: Array = _sfx.FALLBACK.keys()
+	#     ステージ選択の音は verify_flow.gd、STAGE 2 の音は verify_stage2.gd で確かめる）
+	var not_stage1: Array = _sfx.FALLBACK.keys() + ["ui_select", "ui_locked"]
 	var all: Array[String] = []
 	for f in DirAccess.get_files_at(SE_DIR):
 		if f.ends_with(".wav") and not (f.get_basename() in not_stage1):

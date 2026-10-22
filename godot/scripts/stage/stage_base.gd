@@ -781,7 +781,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _gs.has_stage(n):
 			_gs.selected = n
 			_refresh_title()
-			Sfx.fire(self, "pop_score")
+			Sfx.fire(self, "ui_select")
 		return
 
 	var advance := false
@@ -795,6 +795,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		State.TITLE:
 			var n: int = _gs.selected
 			if not _gs.is_unlocked(n):
+				Sfx.fire(self, "ui_locked")
 				return
 			Sfx.fire(self, "ui_start")
 			if n == stage_number():

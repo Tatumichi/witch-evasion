@@ -56,9 +56,12 @@ func _run(s1: Node) -> void:
 	if not _check(s1.state == Base.State.TITLE and title.text.contains("STAGE 1"), "タイトルは STAGE 1"): return
 	await _press(KEY_RIGHT)
 	if not _check(title.text.contains("STAGE 2") and int(_gs.selected) == 2, "→ で STAGE 2 を選べる"): return
+	var sfx: Node = s1.get_node("SFX")
+	if not _check(int(sfx.counts.get("ui_select", 0)) == 1, "ステージを選ぶと選択音（ui_select）"): return
 	await _press(KEY_SPACE)
 	await _wait(0.3)
 	if not _check(s1.state == Base.State.TITLE and current_scene == s1, "未解放の STAGE 2 は始まらない"): return
+	if not _check(int(sfx.counts.get("ui_locked", 0)) == 1 and int(sfx.counts.get("ui_start", 0)) == 0, "未解放で決定するとロック音（ui_locked）、決定音は鳴らない"): return
 	await _press(KEY_LEFT)
 
 	# --- STAGE 1 をボス戦から始めてクリア

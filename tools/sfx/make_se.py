@@ -648,6 +648,19 @@ def _():
     birds = [(chirp(hz(nm), hz(nm) * 1.12, 0.06) * 0.25, s, 1) for nm, s in (('Bb6', 0.7), ('Eb7', 0.82), ('Bb6', 1.25))]
     return mix((out, 0, 1), *birds)
 
+# ---- UI（ステージ選択）
+@se('ui_select', -12)
+def _():
+    # ステージ選択で ←→: 小さなチェレスタ（スコアのポップと分ける）
+    return reverb(mix((bell(hz('G6'), 0.25, 0.5, 0.07), 0, 1), (marimba(hz('G5'), 0.1), 0, 0.4)), 0.3, 0.12)
+
+@se('ui_locked', -10)
+def _():
+    # まだ遊べないステージで決定: こもった低い 2 音（D → C）。責める感じにしない
+    a = lowpass(marimba(hz('D5'), 0.14), 1800)
+    b = lowpass(marimba(hz('C5'), 0.2), 1500)
+    return mix((a, 0, 1), (b, 0.11, 0.9))
+
 # 聞こえの大きさの目標（最も大きい 100ms 区間の RMS, dBFS）。
 # 予告・危険は大きめ、連発するもの・UI は小さめ。ピークは -1dBFS を超えないようにする。
 LOUD = {
@@ -663,6 +676,8 @@ LOUD = {
     'balloon_pop': -12, 'balloon_rise': -16, 'fluff_storm_loop': -20, 'geese_scatter': -15, 'windmill_loop': -22,
     'boss2_start': -11, 'boss2_blades_loop': -20, 'geese_incoming': -15, 'fluff_pop': -21, 'flour_throw': -16,
     'tree_rustle': -15,
+    # UI
+    'ui_select': -22, 'ui_locked': -19,
 }
 
 def loudness_db(x):
