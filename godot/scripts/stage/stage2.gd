@@ -4,7 +4,8 @@ extends "res://scripts/stage/stage_base.gd"
 ## 綿毛の嵐・風船・渡り鳥の V 字・画面端の風車。ボスは「はぐれ大風車」。スクロールは 1.1 倍。
 ## 共通の進行（帽子・猫・キャンディ・やり直し・ボス戦の流れ・結果）は stage_base.gd。
 ##
-## 効果音は STAGE 1 の 42 音を流用している（専用音が無いもの）。割り当ては docs/sound_effects.md の「STAGE 2」。
+## 効果音は STAGE 1 の 42 音を流用している。専用にしたい音は専用の名前で鳴らし、ファイルが無いあいだは
+## sfx.gd の FALLBACK が既存音に振り替える（割り当ては docs/sound_effects.md の「STAGE 2」）。
 ## BGM は専用曲ができるまで STAGE 1 の曲を流す（bgm_track）。
 
 const FluffScript := preload("res://scripts/stage/fluff.gd")
@@ -205,6 +206,7 @@ func spawn_filler(kind: String) -> void:
 
 func _on_tree_passed() -> void:
 	if state == State.ROAD:
+		Sfx.fire(self, "tree_rustle", {"x": 150.0})
 		_say_once("tree", "メルル", "森の木より、高いところ……もう、どこまで行っちゃうの〜……", 3.0)
 
 
@@ -220,6 +222,7 @@ func _spawn_balloon(x: float, with_cat := false) -> void:
 	var b = BalloonScript.new()
 	var rise := 70.0 if with_cat else _rng.randf_range(60.0, 110.0)
 	b.setup(Vector2(x, 1010.0), rise, _rng, with_cat)
+	Sfx.fire(self, "balloon_rise", {"x": x})
 	if with_cat:
 		b.released_cat.connect(func(pos: Vector2): _spawn_cat(Fur.TABBY, pos, "迷子の風船から", false))
 	world.add_child(b)
@@ -280,7 +283,7 @@ func _spawn_geese_v(dir: float) -> void:
 			world.add_child(b)
 	_last_v_t = road_t
 	_hold(1.6)
-	Sfx.fire(self, "pigeon_incoming", {"x": lead.x, "pitch": 0.85})
+	Sfx.fire(self, "geese_incoming", {"x": lead.x})
 	_count("geese")
 
 

@@ -6,7 +6,7 @@ extends Area2D
 ## 画像: assets/props/balloon.png があれば使う。**白〜薄い灰色で描いた 1 枚**を、ゲーム側で 4 色に着色する
 ##       （幅 DRAW_W px、風船の玉の中心が原点。ひもは画像に含めず、コードで描いて揺らす）。
 ##       ぶら下がる猫は assets/props/cat_tabby.png を流用する。無ければコード描画。
-## 音:   割れる → candy_fire を低めに鳴らして「ぽんっ」（専用 SE が無いあいだの代用）。
+## 音:   割れる → balloon_pop（専用音が無いあいだは FALLBACK で candy_fire を低めに）。下から来る予告は stage2.gd が balloon_rise。
 
 signal released_cat(pos: Vector2)
 
@@ -77,7 +77,7 @@ func _pop() -> void:
 	remove_from_group("bumpers")
 	remove_from_group("breakable")
 	set_deferred("monitorable", false)
-	Sfx.fire(self, "candy_fire", {"x": global_position.x, "pitch": 0.62, "pitch_jitter": 0.05, "volume_db": 3.0})
+	Sfx.fire(self, "balloon_pop", {"x": global_position.x, "pitch_jitter": 0.05})
 	if has_cat:
 		has_cat = false
 		# 当たり判定の処理中（ぶつかった・キャンディ）に割れることがあるので、猫の生成は後回しにする

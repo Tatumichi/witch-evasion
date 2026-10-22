@@ -15,8 +15,9 @@ extends Node2D
 ##   assets/characters/boss/windmill_house.png  … 小屋。幅 HOUSE_W px。HOUSE_HUB の位置が羽根の軸
 ##   assets/characters/boss/windmill_blades.png … 4 枚羽根。正方形・ハブが中心。一辺 = BLADE_LEN × 2 で回す
 ##   軸の上の猫は assets/props/cat_tabby.png を流用
-## 音: 登場 boss_appear（ステージ側）/ 戦闘中は羽根の軋み vane_spin をループ / 突風 gust_warning → gust /
-##     袋を投げる arrow_volley（低め）/ 袋が破れる smoke_in（flour_bag.gd）/ 帆をたたむ boss_leave
+## 音: 登場 boss_appear（ステージ側）/ 戦闘開始 boss2_start / 戦闘中は羽根の軋み boss2_blades_loop /
+##     突風 gust_warning → gust / 袋を投げる flour_throw / 袋が破れる smoke_in（flour_bag.gd）/ 帆をたたむ boss_leave
+##     boss2_* と flour_throw は専用音が無いあいだ sfx.gd の FALLBACK で既存音に振り替わる（boss2_start は無音）
 
 signal satisfied
 signal drop_cat(pos: Vector2)
@@ -141,6 +142,7 @@ func begin_fight() -> void:
 	_fight_t = 0.0
 	_start_attack(Attack.TURN)
 	_set_creak(true)
+	Sfx.fire(self, "boss2_start")
 
 
 func feed() -> void:
@@ -164,9 +166,9 @@ func _set_creak(on: bool) -> void:
 		return
 	_creaking = on
 	if on:
-		Sfx.loop_on(self, "vane_spin")
+		Sfx.loop_on(self, "boss2_blades_loop")
 	else:
-		Sfx.loop_off(self, "vane_spin")
+		Sfx.loop_off(self, "boss2_blades_loop")
 
 
 func _set_force(f: Vector2) -> void:
@@ -285,7 +287,7 @@ func _throw_bag() -> void:
 	var vx := (target_x - door.x) / t
 	b.setup(door, Vector2(vx, _rng.randf_range(-260.0, -160.0)), t)
 	_world.add_child(b)
-	Sfx.fire(self, "arrow_volley", {"x": door.x, "pitch": 0.8, "pitch_jitter": 0.05, "volume_db": -3.0})
+	Sfx.fire(self, "flour_throw", {"x": door.x, "pitch_jitter": 0.05})
 
 
 func _process(_delta: float) -> void:

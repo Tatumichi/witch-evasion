@@ -8,7 +8,7 @@ extends Area2D
 ##   assets/props/windmill_blades.png … 4 枚羽根。**正方形・ハブが画像の中心・羽根の先が画像の端**。
 ##                                       ゲームでは一辺 = 羽根の長さ × 2 に拡大縮小して回す
 ##   assets/props/windmill_house.png  … 小屋。屋根の頂点付近がハブ（原点）。幅 HOUSE_W px で描く
-## 音: 画面にいるあいだ vane_spin（きぃきぃ）をループ。何基いても 1 本（STAGE 1 の風見鶏と共用）。
+## 音: 画面にいるあいだ windmill_loop をループ。何基いても 1 本（専用音が無いあいだは FALLBACK で vane_spin）。
 
 const Sfx := preload("res://scripts/stage/sfx.gd")
 const BLADES_TEX := "res://assets/props/windmill_blades.png"
@@ -65,11 +65,11 @@ func _ready() -> void:
 
 
 func _enter_tree() -> void:
-	Sfx.loop_on(self, "vane_spin")
+	Sfx.loop_on(self, "windmill_loop")
 
 
 func _exit_tree() -> void:
-	Sfx.loop_off(self, "vane_spin")
+	Sfx.loop_off(self, "windmill_loop")
 
 
 func _physics_process(delta: float) -> void:

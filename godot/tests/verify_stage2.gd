@@ -84,14 +84,16 @@ func _run() -> void:
 	var hats_before: int = _scene.hats
 	player.invincible = 0.0
 	player.global_position = Vector2(270.0, 700.0)
-	var pops_before := _n("candy_fire")
+	var pops_before := _n("balloon_pop")
+	var alt_before := _n("candy_fire")
 	var b = BalloonScript.new()
 	b.setup(Vector2(254.0, 760.0), 80.0, RandomNumberGenerator.new())
 	_scene.world.add_child(b)
 	await _wait(0.8)
 	if not _check(_scene.hats == hats_before, "風船に当たっても帽子は減らない"): return
 	if not _check(not is_instance_valid(b) or not b.is_in_group("bumpers"), "風船が割れる"): return
-	if not _check(_n("candy_fire") > pops_before, "風船が割れる音（candy_fire を低めに流用）"): return
+	if not _check(_n("balloon_pop") > pops_before, "風船が割れる音（balloon_pop）"): return
+	if not _check(_n("candy_fire") > alt_before, "専用音が無いあいだは candy_fire に振り替えて鳴らす"): return
 
 	# --- 猫つき風船：割れると猫が落ちてくる
 	var cats_before := int(_scene.spawn_counts.get("cat", 0))
@@ -108,7 +110,8 @@ func _run() -> void:
 	g.setup(Vector2(100.0, 300.0), Vector2.ZERO, 0.0)
 	_scene.world.add_child(g)
 	g.break_apart()
-	if not _heard(["laundry_pop", "pigeon_scatter"], "綿毛が吹き飛ぶ・渡り鳥が逃げる音"): return
+	if not _heard(["fluff_pop", "geese_scatter"], "綿毛が吹き飛ぶ・渡り鳥が逃げる音"): return
+	if not _heard(["laundry_pop", "pigeon_scatter"], "（専用音が無いあいだは洗濯物・鳩の音に振り替え）"): return
 
 	# --- 道中を通しで（被弾なし）
 	_scene.start_stage()
@@ -119,8 +122,8 @@ func _run() -> void:
 	for i in int(130.0 * 60.0):
 		if _scene.state == Base.State.BOSS_INTRO:
 			break
-		storm_heard = storm_heard or _sfx.is_looping("storm_loop")
-		mill_heard = mill_heard or _sfx.is_looping("vane_spin")
+		storm_heard = storm_heard or _sfx.is_looping("fluff_storm_loop")
+		mill_heard = mill_heard or _sfx.is_looping("windmill_loop")
 		await physics_frame
 	if not _check(_scene.state == Base.State.BOSS_INTRO, "道中 120 秒を走りきってボス登場"): return
 	var c: Dictionary = _scene.spawn_counts
@@ -129,9 +132,10 @@ func _run() -> void:
 		if not _check(int(c.get(kind, 0)) > 0, "道中に %s が出た" % kind): return
 	if not _check(int(c.get("cat", 0)) == 3, "道中の猫は 3 匹（猫つき風船を含む）"): return
 	if not _check(_scene._said.has("tree"), "大木を越えたセリフが出た"): return
-	if not _check(storm_heard, "綿毛の嵐のあいだ風音（storm_loop）がループする"): return
-	if not _check(mill_heard, "風車がいるあいだ軋み（vane_spin）がループする"): return
-	if not _heard(["pigeon_incoming", "boss_appear"], "渡り鳥の予告・ボス登場"): return
+	if not _check(storm_heard, "綿毛の嵐のあいだ風音（fluff_storm_loop）がループする"): return
+	if not _check(mill_heard, "風車がいるあいだ軋み（windmill_loop）がループする"): return
+	if not _heard(["storm_loop", "vane_spin"], "（専用音が無いあいだは storm_loop・vane_spin に振り替え）"): return
+	if not _heard(["geese_incoming", "balloon_rise", "tree_rustle", "boss_appear"], "渡り鳥の予告・風船の予告・大木・ボス登場"): return
 	await _wait(0.3)
 	if not _check(_bgm.current_key() == "stage1_boss", "ボス戦は STAGE 1 のボス曲を流す（専用曲ができるまで）"): return
 
@@ -145,11 +149,11 @@ func _run() -> void:
 				bags += 1
 	if not _check(int(_scene.spawn_counts.get("cat", 0)) == 4, "ボス戦で軸の上の猫が落ちる"): return
 	if not _check(bags > 0, "小麦粉の袋が飛んでくる"): return
-	if not _heard(["gust_warning", "gust", "arrow_volley", "smoke_in"], "ボスの突風の予告・突風・袋を投げる・袋が破れる"): return
-	if not _check(_sfx.is_looping("vane_spin"), "ボス戦のあいだ羽根の軋みがループする"): return
+	if not _heard(["boss2_start", "gust_warning", "gust", "flour_throw", "smoke_in"], "ボス戦開始・突風の予告・突風・袋を投げる・袋が破れる"): return
+	if not _check(_sfx.is_looping("boss2_blades_loop"), "ボス戦のあいだ羽根の軋みがループする"): return
 	if not _check(await _wait_until(func(): return _scene.state == Base.State.CLEAR, 60.0), "満足ゲージが満タンになってクリア"): return
 	await _wait(0.3)
-	if not _check(not _sfx.is_looping("vane_spin"), "満足したら羽根の軋みが止まる"): return
+	if not _check(not _sfx.is_looping("boss2_blades_loop"), "満足したら羽根の軋みが止まる"): return
 	if not _check(await _wait_until(func(): return _scene.hud.is_result_visible(), 10.0), "クリア結果を表示"): return
 	if not _heard(["boss_satisfied", "boss_leave", "god_voice", "result_line"], "満足・帆をたたむ・神々・結果"): return
 	if not _check(_scene.hud._result_title.text == "STAGE 2 CLEAR!", "結果の見出しが STAGE 2"): return

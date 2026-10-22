@@ -3,7 +3,8 @@ extends Area2D
 ## ステージ側が「嵐」としてまとめて降らせ、すき間をぬって進ませる。キャンディで吹き飛ばせる。横風（wind）に流される。
 ##
 ## 画像: assets/props/fluff.png があれば使う（幅 DRAW_W px、綿毛の玉の中心が原点）。無ければ下のコード描画。
-## 音:   嵐の綿毛（in_storm）が画面にあるあいだ storm_loop をループ（何粒いても 1 本）。吹き飛ぶと laundry_pop を高めに。
+## 音:   嵐の綿毛（in_storm）が画面にあるあいだ fluff_storm_loop をループ（何粒いても 1 本）。吹き飛ぶと fluff_pop。
+##       どちらも専用音が無いあいだは sfx.gd の FALLBACK で既存音（storm_loop / laundry_pop 高め）が鳴る。
 
 const Sfx := preload("res://scripts/stage/sfx.gd")
 const TEX_PATH := "res://assets/props/fluff.png"
@@ -58,9 +59,9 @@ func _set_loop(on: bool) -> void:
 		return
 	_looping = on
 	if on:
-		Sfx.loop_on(self, "storm_loop")
+		Sfx.loop_on(self, "fluff_storm_loop")
 	else:
-		Sfx.loop_off(self, "storm_loop")
+		Sfx.loop_off(self, "fluff_storm_loop")
 
 
 func break_apart() -> void:
@@ -70,7 +71,7 @@ func break_apart() -> void:
 	remove_from_group("obstacles")
 	remove_from_group("breakable")
 	set_deferred("monitorable", false)
-	Sfx.fire(self, "laundry_pop", {"x": global_position.x, "pitch": 1.35, "pitch_jitter": 0.08})
+	Sfx.fire(self, "fluff_pop", {"x": global_position.x, "pitch_jitter": 0.08})
 	_set_loop(false)
 	vel = Vector2(randf_range(-160.0, 160.0), -320.0)
 	var tw := create_tween()

@@ -9,6 +9,8 @@ extends Node
 ##   - 同じ音の同時発音数を MAX_VOICES で制限（超えたら一番古いものを止めて鳴らし直す）
 ##   - 全体の同時発音数は POOL_SIZE。あふれたら PRIORITY 以外の一番古い音を止める
 ##   - pitch_jitter で音程を少し揺らす
+##
+## 専用音がまだ無い名前は FALLBACK で既存の音に振り替える（STAGE 2 以降）。専用の .wav を置けば自動でそちらが鳴る。
 
 const DIR := "res://assets/audio/se/%s.wav"
 const POOL_SIZE := 14
@@ -20,13 +22,31 @@ const MAX_VOICES := {
 	"talk_meruru": 1, "talk_god": 1, "courage": 3, "cat_effect_warn": 1, "arrow_volley": 1,
 	"hit": 1, "faint": 1, "gust": 1, "gust_warning": 1, "church_bell": 1,
 }
+## 専用音がまだ無い名前 → [代わりに鳴らす既存音, 上乗せする opts]。代わりが "" なら鳴らさない（記録だけ）。
+## assets/audio/se/<名前>.wav を置くと、FALLBACK より実ファイルが優先される。一覧は docs/sound_effects.md。
+const FALLBACK := {
+	# STAGE 2「丘と森の上空」
+	"fluff_storm_loop": ["storm_loop", {}],
+	"fluff_pop": ["laundry_pop", {"pitch": 1.35}],
+	"balloon_pop": ["candy_fire", {"pitch": 0.62, "volume_db": 3.0}],
+	"balloon_rise": ["", {}],
+	"geese_incoming": ["pigeon_incoming", {"pitch": 0.85}],
+	"geese_scatter": ["pigeon_scatter", {"pitch": 0.82}],
+	"windmill_loop": ["vane_spin", {}],
+	"tree_rustle": ["", {}],
+	"boss2_start": ["", {}],
+	"boss2_blades_loop": ["vane_spin", {}],
+	"flour_throw": ["arrow_volley", {"pitch": 0.8, "volume_db": -3.0}],
+}
+
 ## 発音数があふれても止めない音（危険の予告と、遊びの手応えに直結するもの）
 const PRIORITY := ["gust_warning", "gust", "pigeon_incoming", "hit", "faint", "cat_fall", "cat_catch",
 	"boss_appear", "boss_satisfied", "hat_restore", "ui_start"]
 
 @export var volume_db := -3.0
 
-## テスト用: 鳴らした音の名前（新しい順に最大 400 件）と、音ごとの累計回数
+## テスト用: 鳴らした音の名前（新しい順に最大 400 件）と、音ごとの累計回数。
+## FALLBACK で振り替えたときは、頼まれた名前と実際に鳴らした名前の両方を記録する。
 var played: Array[String] = []
 var counts := {}
 
@@ -82,6 +102,13 @@ func play(name: String, opts := {}) -> void:
 	if delay > 0.0:
 		get_tree().create_timer(delay, false).timeout.connect(func(): play(name, _without_delay(opts)))
 		return
+	if not _has_file(name) and FALLBACK.has(name):
+		_log(name)
+		var alt: String = FALLBACK[name][0]
+		if alt == "":
+			return
+		opts = _merge(opts, FALLBACK[name][1])
+		name = alt
 	var stream := _stream(name)
 	if stream == null:
 		return
@@ -112,8 +139,9 @@ func _exit_tree() -> void:
 		p.stream = null
 	for name in _loops:
 		var p: AudioStreamPlayer2D = _loops[name].player
-		p.stop()
-		p.stream = null
+		if p:
+			p.stop()
+			p.stream = null
 	_loops.clear()
 
 
@@ -121,7 +149,15 @@ func loop_acquire(name: String) -> void:
 	if _loops.has(name):
 		_loops[name].count += 1
 		return
-	var stream := _stream(name)
+	# ループは頼まれた名前で数える（振り替え先が同じでも別のループとして止められるように）
+	var source := name
+	if not _has_file(name) and FALLBACK.has(name):
+		_log(name)
+		source = FALLBACK[name][0]
+		if source == "":
+			_loops[name] = {"player": null, "count": 1}
+			return
+	var stream := _stream(source)
 	if stream == null:
 		return
 	var p := AudioStreamPlayer2D.new()
@@ -135,7 +171,7 @@ func loop_acquire(name: String) -> void:
 		p.play()
 	create_tween().tween_property(p, "volume_db", volume_db, 0.25)
 	_loops[name] = {"player": p, "count": 1}
-	_log(name)
+	_log(source)
 
 
 func loop_release(name: String) -> void:
@@ -146,6 +182,8 @@ func loop_release(name: String) -> void:
 		return
 	var p: AudioStreamPlayer2D = _loops[name].player
 	_loops.erase(name)
+	if p == null:
+		return
 	var tw := create_tween()
 	tw.tween_property(p, "volume_db", volume_db - 40.0, 0.3)
 	tw.tween_callback(p.queue_free)
@@ -158,6 +196,23 @@ func is_looping(name: String) -> bool:
 func _log(name: String) -> void:
 	played.push_front(name)
 	counts[name] = int(counts.get(name, 0)) + 1
+
+
+func _has_file(name: String) -> bool:
+	return ResourceLoader.exists(DIR % name)
+
+
+## opts に振り替え用の opts を重ねる（pitch は掛け算、volume_db は足し算、それ以外は上書きしない）。
+func _merge(opts: Dictionary, extra: Dictionary) -> Dictionary:
+	var o := opts.duplicate()
+	for k in extra:
+		if k == "pitch":
+			o["pitch"] = float(o.get("pitch", 1.0)) * float(extra[k])
+		elif k == "volume_db":
+			o["volume_db"] = float(o.get("volume_db", 0.0)) + float(extra[k])
+		elif not o.has(k):
+			o[k] = extra[k]
+	return o
 
 
 func _stream(name: String) -> AudioStream:

@@ -4,7 +4,7 @@ extends Area2D
 ##
 ## 画像: assets/props/goose.png があれば使う。**右向き**で描く（左へ飛ぶときはゲーム側で反転）。
 ##       幅 DRAW_W px、胴の中心が原点。羽ばたきは画像を上下に揺らして表す。無ければコード描画。
-## 音:   逃げる → pigeon_scatter を低めに（専用 SE が無いあいだの代用）。隊列の出現は stage2.gd が pigeon_incoming。
+## 音:   逃げる → geese_scatter（専用音が無いあいだは FALLBACK で pigeon_scatter を低めに）。隊列の出現は stage2.gd が geese_incoming。
 
 const Sfx := preload("res://scripts/stage/sfx.gd")
 const TEX_PATH := "res://assets/props/goose.png"
@@ -50,7 +50,7 @@ func break_apart() -> void:
 	if _fleeing:
 		return
 	_fleeing = true
-	Sfx.fire(self, "pigeon_scatter", {"x": global_position.x, "pitch": 0.82, "pitch_jitter": 0.06})
+	Sfx.fire(self, "geese_scatter", {"x": global_position.x, "pitch_jitter": 0.06})
 	remove_from_group("obstacles")
 	remove_from_group("breakable")
 	set_deferred("monitorable", false)
