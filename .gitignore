@@ -25,3 +25,27 @@ Desktop.ini
 # ---- Build output ----
 build/
 *.exe
+
+# ---- 生成の実験ログ（成果物は art/meluru/final_rich と kv2/kv3 のみ）----
+art/bench/
+art/cn/
+art/lora/
+art/style/
+art/style2/
+art/pose/
+art/witch/preset_check_*
+art/witch/template_check*
+art/meluru/_*
+art/meluru/final/
+art/meluru/kv/
+art/meluru/rich/
+art/meluru/rich2/
+art/meluru/trim/
+art/meluru/kv2/kvr_*
+art/meluru/kv2/title_*.jpg
+art/meluru/kv2/meluru_kv_rich_title_src.png
+art/meluru/kv3/kvp_*
+art/meluru/kv3/prev_*.jpg
+art/meluru/meluru_*
+art/meluru/preset_*
+art/meluru/template_*

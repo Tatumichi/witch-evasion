@@ -49,6 +49,9 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	# シーンの構築順によっては _ready 時点で相手が居ないことがあるので遅延解決する
+	if _target == null and not target_path.is_empty():
+		_target = get_node_or_null(target_path) as Node2D
 	if _target:
 		global_position = _target.global_position + follow_offset
 
