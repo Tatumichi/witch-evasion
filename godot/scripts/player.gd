@@ -13,6 +13,9 @@ const DRAW_SCALE := 0.95
 const SPRITE_PATH := "res://assets/characters/witch/witch_sprite.png"
 const HIT_SPRITE_PATH := "res://assets/characters/witch/witch_hit.png"
 const SPRITE_ORIGIN := Vector2(135.0, 125.0)   # 画像内でゲーム座標(0,0)にあたる画素
+## スプライトの見た目の中心（tools/prepare_sprite.py の --center と一致）。
+## 当たり判定はこの点を基準に置く。ノード原点 (0,0) は絵の中心ではない。
+const VISUAL_CENTER := Vector2(-16.0, -32.0)
 const TRAIL_ANCHOR := Vector2(-70.0, -28.0)    # ほうきの穂先（後方）
 
 const SKIN := Color(1.0, 0.88, 0.79)
@@ -48,7 +51,7 @@ var _history: Array[Vector2] = []
 
 func _ready() -> void:
 	collision_layer = 1
-	collision_mask = 6
+	# collision_mask はシーン側で決める（旧 main.tscn は障害物＋ピックアップ、stage1 は障害物のみ）
 	area_entered.connect(_on_area_entered)
 	_build_sprite()
 	_build_trail()

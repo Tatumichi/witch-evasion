@@ -113,6 +113,9 @@ godot --headless --path godot --script res://tests/verify_ui.gd
 # --fixed-fps 60 を付けると実時間を待たずに数秒で終わる
 godot --headless --path godot --fixed-fps 60 --script res://tests/verify_stage1.gd
 
+# 当たり判定が見た目の中心にあり、アイテム・猫を拾えるか（失敗時は exit 1）
+godot --headless --path godot --fixed-fps 60 --script res://tests/verify_hitbox.gd
+
 # STAGE 1：タイトルを飛ばして開始 / ボス戦から開始 / 被弾しない（確認用。組み合わせ可）
 godot --path godot -- --start
 godot --path godot -- --boss

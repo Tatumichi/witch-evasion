@@ -37,6 +37,11 @@ func _ready() -> void:
 	super()
 	_build_front()
 	area_exited.connect(_on_area_exited)
+	# 取得判定は被弾判定より広い別 Area2D（CatchArea）。見た目に触れたら拾えるようにする。
+	var catch_area := get_node_or_null("CatchArea") as Area2D
+	if catch_area:
+		catch_area.area_entered.connect(_on_area_entered)
+		catch_area.area_exited.connect(_on_area_exited)
 
 
 func spawn_at(pos: Vector2) -> void:
@@ -104,6 +109,7 @@ func _physics_process(delta: float) -> void:
 
 
 ## 当たり判定は毎フレームの重なりで見る。無敵が切れた瞬間に重なっていても被弾できるようにするため。
+## ここで見るのは本体の Area2D（collision_mask = 障害物のみ）。取得物は CatchArea が拾う。
 func _check_obstacles() -> void:
 	if god_mode or barrier or invincible > 0.0 or not monitoring:
 		return

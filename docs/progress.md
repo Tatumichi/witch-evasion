@@ -18,6 +18,7 @@
 
 ## 直近でやったこと
 
+- 当たり判定をスプライトの見た目の中心に修正。取得は被弾より広い `CatchArea` に分離（`verify_hitbox.gd`）
 - 音を実装。BGM「村の空」「迷子の風見鶏」（ピアノ）と SE 42 音。`bgm.gd`・`sfx.gd`、検証 `verify_bgm.gd`・`verify_sfx.gd`
 - ボスの状態を記号で表示（ハート・湯気・渦巻き）。`--boss --symbol=` で確認できる
 

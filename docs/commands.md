@@ -15,6 +15,7 @@ $GD --headless --editor --quit --path godot
 $GD --headless --path godot --script res://tests/verify_sprite.gd
 $GD --headless --path godot --script res://tests/verify_ui.gd
 $GD --headless --path godot --script res://tests/verify_stage1.gd
+$GD --headless --path godot --fixed-fps 60 --script res://tests/verify_hitbox.gd
 $GD --headless --path godot --script res://tests/verify_shadow.gd
 $GD --headless --path godot --fixed-fps 60 --script res://tests/verify_bgm.gd
 $GD --headless --path godot --fixed-fps 60 --script res://tests/verify_sfx.gd
