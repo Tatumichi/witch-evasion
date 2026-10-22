@@ -117,6 +117,16 @@ py -3.12 -m venv C:/AI/ComfyUI/.venv
 
 起動: ワークスペースの `tools\start-comfyui.cmd` → http://127.0.0.1:8188
 
+**検証済みの実測値**
+
+| 項目 | 値 |
+|---|---|
+| ComfyUI | 0.42.0 |
+| torch | 2.14.1+cu126 |
+| Python | 3.12.10 |
+| CUDA | `cuda:0 NVIDIA GeForce RTX 3060` / VRAM 12.88GB（空き 11.80GB） |
+| 起動 | 約 70 秒で `/system_stats` 応答（コールドスタート） |
+
 ### モデル（12GB VRAM 向け）
 
 `C:\AI\ComfyUI\models\checkpoints\` に置く。**1つから始めるのが吉**。
@@ -166,7 +176,25 @@ pixel art は SDXL + `pixel-art-xl` LoRA、または SD1.5 + ドット絵 LoRA �
 
 ---
 
-## 8. アンインストール
+## 8. 構築完了時の検証結果
+
+| 検証項目 | コマンド | 結果 |
+|---|---|---|
+| Godot の版 | `godot --version` | `4.7.2.stable.official.ed1daf0bf` ✅ |
+| Godot の起動 | `godot --headless --quit --path godot` | `[OK] Godot boot: scene loaded` ✅ |
+| LDtk | ファイルバージョン | `1.5.3` ✅ |
+| Cline | VS Code 拡張一覧 | `v4.1.25` インストール済み ✅ |
+| Python 3.12 | `py -3.12 --version` | `3.12.10` ✅ |
+| torch + CUDA | `torch.cuda.is_available()` | `True` / RTX 3060 12.9GB ✅ |
+| ComfyUI 起動 | `/system_stats` | `0.42.0` / `cuda:0` 認識 ✅ |
+| git | `git log` | 初回コミット済み ✅ |
+
+**未実施（意図的）**: Godot のエクスポートテンプレート、ComfyUI のモデル（数 GB）は
+初回利用時に取得してください。
+
+---
+
+## 9. アンインストール
 
 ```bash
 winget uninstall GodotEngine.GodotEngine

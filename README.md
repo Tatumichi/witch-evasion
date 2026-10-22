@@ -10,7 +10,7 @@ DeepSeek を AI 相棒にして Godot 4 でゲームを作るための環境で�
 | AI エージェント（リポジトリ操作） | **DeepSeek Harness** | このセッション |
 | AI エージェント（エディタ内） | **Cline v4.1.25** + DeepSeek API | VS Code 拡張 |
 | マップ作成 | **LDtk 1.5.x** | `ldtk` コマンド |
-| 画像生成 | **ComfyUI**（RTX 3060 12GB） | `C:\AI\ComfyUI` |
+| 画像生成 | **ComfyUI 0.42.0**（RTX 3060 12GB・CUDA 検証済） | `C:\AI\ComfyUI` |
 | キャラクター | VRoidStudio（VRM） | 導入済み |
 | バージョン管理 | git 2.56 + GitHub | このフォルダ |
 
