@@ -17,6 +17,10 @@ const TOWER_PARALLAX := 0.45
 const HAZE := 0.28             # 遠景なので空の色を少し混ぜる
 const PLAYER_Y := 710.0
 
+## 画像素材（無ければ下のコード描画にフォールバックする）
+const VILLAGE_TEX := "res://assets/background/village_band.png"
+const TOWER_TEX := "res://assets/background/tower.png"
+
 const SKY_TOP_A := Color(0.30, 0.27, 0.55)
 const SKY_TOP_B := Color(0.47, 0.67, 0.93)
 const SKY_MID_A := Color(0.98, 0.62, 0.52)
@@ -38,12 +42,18 @@ var _back: Array = []
 var _front: Array = []
 var _clouds: Array = []
 var _tower_done := false
+var _village_tex: Texture2D
+var _tower_tex: Texture2D
 
 
 func _ready() -> void:
 	z_index = -10
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1201   # 村の並びは毎回同じにする
+	if ResourceLoader.exists(VILLAGE_TEX):
+		_village_tex = load(VILLAGE_TEX) as Texture2D
+	if ResourceLoader.exists(TOWER_TEX):
+		_tower_tex = load(TOWER_TEX) as Texture2D
 	_back = _make_row(rng, 0.62, 90.0)
 	_front = _make_row(rng, 1.0, 0.0)
 	for i in 7:
@@ -108,11 +118,18 @@ func _draw() -> void:
 		_draw_cloud(c["pos"], float(c["w"]), 0.35 + 0.35 * k)
 
 	var off := town_offset()
-	_draw_tower(off * TOWER_PARALLAX, k)
+	if _tower_tex:
+		_draw_tower_tex(off * TOWER_PARALLAX)
+	else:
+		_draw_tower(off * TOWER_PARALLAX, k)
 	if off < GAME_H + 200.0:
-		_draw_row(_back, off * 0.85)
-	if off < GAME_H + 200.0:
-		_draw_row(_front, off)
+		if _village_tex:
+			# 遠景（薄く・少し上）と近景の2枚重ねで奥行きを出す
+			_draw_band(off * 0.85, 0.55, 54.0)
+			_draw_band(off, 1.0, 0.0)
+		else:
+			_draw_row(_back, off * 0.85)
+			_draw_row(_front, off)
 
 
 func _draw_sky(k: float) -> void:
@@ -169,6 +186,25 @@ func _draw_row(row: Array, off: float) -> void:
 		var win := WINDOW if shade >= 1.0 else WINDOW.darkened(0.3)
 		draw_rect(Rect2(x + w * 0.2, top + 18.0, 12.0, 14.0), win)
 		draw_rect(Rect2(x + w * 0.6, top + 18.0, 12.0, 14.0), win)
+
+
+## 村の帯を画面幅に合わせて敷く。off だけ下へ流れる。
+func _draw_band(off: float, alpha: float, lift: float) -> void:
+	var w := GAME_W
+	var h := w * float(_village_tex.get_height()) / float(_village_tex.get_width())
+	var y := GAME_H + off - h - lift
+	draw_texture_rect(_village_tex, Rect2(0.0, y, w, h), false, Color(1.0, 1.0, 1.0, alpha))
+
+
+## 教会の塔を画像で描く。パララックスは従来と同じ。
+func _draw_tower_tex(off: float) -> void:
+	var h := TOWER_H
+	var w := h * float(_tower_tex.get_width()) / float(_tower_tex.get_height())
+	var base := GAME_H + off
+	var top := base - h
+	if top - 100.0 > GAME_H:
+		return
+	draw_texture_rect(_tower_tex, Rect2(TOWER_X - w * 0.5, top, w, h), false)
 
 
 func _draw_tower(off: float, k: float) -> void:
