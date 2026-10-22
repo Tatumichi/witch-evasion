@@ -8,6 +8,7 @@ const SAVE_PATH := "user://witch_stage.cfg"
 ## ステージ番号 → シーンとステージ名。ステージを増やしたらここに足す。
 const STAGES := {
 	1: {"scene": "res://scenes/stage1.tscn", "name": "村の空"},
+	2: {"scene": "res://scenes/stage2.tscn", "name": "丘と森の上空"},
 }
 
 ## 次のシーンでタイトルを飛ばしてすぐ始めるか（ステージ間の移動で使う）。

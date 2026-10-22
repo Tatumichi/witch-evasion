@@ -192,6 +192,7 @@ func _ready() -> void:
 	player.cat_caught.connect(_on_cat_caught)
 	player.courage_got.connect(_on_courage)
 	player.smoke_changed.connect(_on_smoke)
+	player.bumped.connect(_on_bumped)
 	stage_ready()
 	_enter_title()
 
@@ -603,6 +604,25 @@ func _on_damaged() -> void:
 		Sfx.fire(self, "hat_warning", {"delay": 0.18})
 	player.start_invincible(INVINCIBLE_TIME)
 	hud.say("メルル", "ひゃっ！" if _rng.randf() < 0.5 else "ご、ごめんなさい〜！", 1.4)
+
+
+## 当たっても帽子は落ちないが、はじかれるもの（風船など。group "bumpers"）に触れた。
+## 相手の bump() を呼び（風船なら割れて音が鳴る）、メルルを相手と反対へはじく。
+func _on_bumped(area: Area2D) -> void:
+	if not state in [State.ROAD, State.BOSS, State.BOSS_INTRO]:
+		return
+	var away: Vector2 = player.global_position - area.global_position
+	if away.length() < 1.0:
+		away = Vector2.DOWN
+	player.knock(away.normalized() * 420.0)
+	if area.has_method("bump"):
+		area.call("bump")
+	stage_on_bumped(area)
+
+
+## はじかれたときのセリフなど（ステージごと）。
+func stage_on_bumped(_area: Area2D) -> void:
+	pass
 
 
 func _on_courage(shard: Area2D) -> void:

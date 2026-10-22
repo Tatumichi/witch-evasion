@@ -2,26 +2,33 @@ extends Node
 ## ステージの BGM。親（stage_base.gd を継承したステージ）の state を毎フレーム見て、曲を切り替える。
 ## ステージ側には手を入れずに済むよう、状態の変化だけを手がかりにしている。
 ##
-##   TITLE / INTRO / ROAD     … 道中曲「村の空」（タイトルから鳴らし、開始しても頭に戻さない）
-##   BOSS_INTRO / BOSS        … ボス曲「迷子の風見鶏」（回転モチーフのイントロが登場演出に重なる）
+##   TITLE / INTRO / ROAD     … 道中曲（STAGE 1 は「村の空」。タイトルから鳴らし、開始しても頭に戻さない）
+##   BOSS_INTRO / BOSS        … ボス曲（STAGE 1 は「迷子の風見鶏」。イントロが登場演出に重なる）
 ##   CLEAR                    … ボス曲をフェードアウト
 ##   FAINT                    … 音量を下げて待つ。やり直しで、道中なら道中曲、ボス戦ならボス曲を頭から
 ##
 ## 音源と作曲データ: godot/assets/audio/bgm/*.ogg ← tools/music/*_bgm.py（MIDI 原本は art/music/）
 ## OGG は「イントロ＋ループ本体」で終わるように書き出してあり、TRACKS の loop_offset 秒の位置へ戻ってループする。
+##
+## どの曲を鳴らすかはステージに聞く: ステージが bgm_track(role) を持っていれば、その名前（TRACKS のキー）を使う。
+## 持っていなければ STAGE 1 の曲。role は "road"（タイトル〜道中）と "boss"。
 
 const StageScript := preload("res://scripts/stage/stage_base.gd")
 
 const TRACKS := {
-	"road": {"path": "res://assets/audio/bgm/stage1_mura_no_sora.ogg", "loop_offset": 12.0},
-	"boss": {"path": "res://assets/audio/bgm/boss1_maigo_no_kazamidori.ogg", "loop_offset": 4.186047},
+	"stage1_road": {"path": "res://assets/audio/bgm/stage1_mura_no_sora.ogg", "loop_offset": 12.0},
+	"stage1_boss": {"path": "res://assets/audio/bgm/boss1_maigo_no_kazamidori.ogg", "loop_offset": 4.186047},
+	# STAGE 2 の専用曲（未作成。docs/stage2-assets.md）。ファイルを置いたら loop_offset を実際のループ位置に直す
+	"stage2_road": {"path": "res://assets/audio/bgm/stage2_oka_to_mori.ogg", "loop_offset": 0.0},
+	"stage2_boss": {"path": "res://assets/audio/bgm/boss2_hagure_fusha.ogg", "loop_offset": 0.0},
 }
 
 @export var volume_db := -6.0
 @export var faint_duck_db := -14.0
 
 var _player: AudioStreamPlayer
-var _current := ""
+var _current := ""        # 役割（"road" / "boss"）
+var _current_key := ""    # TRACKS のキー
 ## ヘッドレス（検証・CI）では音を出さない。Godot は再生中のまま終了すると「resources still in use」を出すため。
 ## どの曲を鳴らすかの判断と音量の変化はそのまま動くので、テストは current_track() と音量で確かめる。
 var _silent := DisplayServer.get_name() == "headless"
@@ -63,14 +70,28 @@ func _process(_delta: float) -> void:
 			_fade_to(volume_db + faint_duck_db, 0.6, false)
 
 
-func _play(key: String, restart: bool) -> void:
-	if key == _current and not restart:
+## その曲のファイルがあるか（ステージが専用曲の有無で切り替えるのに使う）。
+static func has_file(key: String) -> bool:
+	return TRACKS.has(key) and ResourceLoader.exists(String(TRACKS[key].path))
+
+
+func _key_for(role: String) -> String:
+	var stage := get_parent()
+	if stage and stage.has_method("bgm_track"):
+		return String(stage.call("bgm_track", role))
+	return "stage1_" + role
+
+
+func _play(role: String, restart: bool) -> void:
+	var key := _key_for(role)
+	if role == _current and key == _current_key and not restart:
 		_fade_to(volume_db, 0.4, false)
 		return
 	var stream := _load(key)
 	if stream == null:
 		return
-	_current = key
+	_current = role
+	_current_key = key
 	_kill_tween()
 	_player.stream = stream
 	_player.volume_db = volume_db
@@ -79,6 +100,9 @@ func _play(key: String, restart: bool) -> void:
 
 
 func _load(key: String) -> AudioStream:
+	if not TRACKS.has(key):
+		push_warning("BGM の名前が TRACKS にありません: %s" % key)
+		return null
 	var info: Dictionary = TRACKS[key]
 	if not ResourceLoader.exists(info.path):
 		push_warning("BGM が見つかりません: %s" % info.path)
@@ -90,9 +114,14 @@ func _load(key: String) -> AudioStream:
 	return stream
 
 
-## 今鳴らしている曲（"road" / "boss"、止まっていれば ""）。
+## 今鳴らしている曲の役割（"road" / "boss"、止まっていれば ""）。
 func current_track() -> String:
 	return _current
+
+
+## 今鳴らしている曲の TRACKS のキー（"stage1_road" など、止まっていれば ""）。
+func current_key() -> String:
+	return _current_key
 
 
 func current_stream() -> AudioStream:
@@ -112,7 +141,8 @@ func _fade_to(db: float, sec: float, stop_after: bool) -> void:
 	if stop_after:
 		_tween.tween_callback(func():
 			_player.stop()
-			_current = "")
+			_current = ""
+			_current_key = "")
 
 
 func _kill_tween() -> void:

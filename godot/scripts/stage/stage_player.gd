@@ -6,6 +6,8 @@ signal damaged
 signal cat_caught(cat: Area2D)
 signal courage_got(shard: Area2D)
 signal smoke_changed(inside: bool)
+## 当たっても帽子は落ちないが、はじかれるもの（group "bumpers"。STAGE 2 の風船など）に触れた
+signal bumped(area: Area2D)
 
 ## 同乗している猫の位置（ほうきの後ろ）。仮グラフィック用の目安。
 const RIDER_POS := Vector2(-76.0, -48.0)
@@ -31,6 +33,7 @@ var _smoke_count := 0
 var _hit_flash := 0.0
 var _spin_faint := false
 var _front: Node2D
+var _knock := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -55,6 +58,7 @@ func spawn_at(pos: Vector2) -> void:
 	_smoke_count = 0
 	_hit_flash = 0.0
 	_spin_faint = false
+	_knock = Vector2.ZERO
 	rotation = _tilt
 
 
@@ -77,6 +81,11 @@ func faint() -> void:
 	riders.clear()
 	rider_active = false
 	barrier = false
+
+
+## はじき飛ばす（風船にぶつかったときなど）。すぐに減衰する。
+func knock(v: Vector2) -> void:
+	_knock = v
 
 
 func add_rider(fur: int) -> void:
@@ -104,6 +113,12 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	super(delta)
+	if _knock != Vector2.ZERO:
+		if alive:
+			position += _knock * delta
+			position.x = clampf(position.x, 40.0, GAME_W - 40.0)
+			position.y = clampf(position.y, GAME_H * 0.24, GAME_H - 60.0)
+		_knock = _knock.move_toward(Vector2.ZERO, 1400.0 * delta)
 	if alive and active:
 		_check_obstacles()
 
@@ -126,6 +141,8 @@ func _on_area_entered(area: Area2D) -> void:
 		courage_got.emit(area)
 	elif area.is_in_group("cats"):
 		cat_caught.emit(area)
+	elif area.is_in_group("bumpers"):
+		bumped.emit(area)
 	elif area.is_in_group("smoke"):
 		_smoke_count += 1
 		if _smoke_count == 1:
